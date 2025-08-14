@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admissions - J & J Secondary School</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admissions.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+            <nav>
+                <div class="logo-section">
+                    <div class="logo-placeholder">
+                        <img src="images/Jandjlogo.png" alt="School Logo">
+                    </div>
+                    <div class="school-info">
+                        <h1>J & J Secondary School</h1>
+                        <div class="tagline">The Arena of a Winner</div>
+                    </div>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#programs">Programs</a></li>
+                    <li><a href="admissions.html" class="active">Admissions</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Admissions Hero -->
+    <section class="admissions-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Join The Arena of Winners</h1>
+                <p>Take the first step towards academic excellence. Apply to J & J Secondary School today and become part of a community that shapes tomorrow's leaders.</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <h3>98%</h3>
+                        <p>Pass Rate</p>
+                    </div>
+                    <div class="stat">
+                        <h3>15+</h3>
+                        <p>Years Experience</p>
+                    </div>
+                    <div class="stat">
+                        <h3>500+</h3>
+                        <p>Graduates</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admission Requirements -->
+    <section class="admission-requirements">
+        <div class="container">
+            <div class="section-header">
+                <h2>Admission Requirements</h2>
+                <p>Meet the following requirements to join our school community</p>
+            </div>
+            <div class="requirements-grid">
+                <div class="requirement-card">
+                    <div class="requirement-icon">📋</div>
+                    <h3>Form 1 Entry</h3>
+                    <ul>
+                        <li>Primary School Leaving Certificate (PSLCE)</li>
+                        <li>Minimum of 5 credits</li>
+                        <li>Age: 13-15 years</li>
+                        <li>Birth certificate</li>
+                    </ul>
+                </div>
+                <div class="requirement-card">
+                    <div class="requirement-icon">🎓</div>
+                    <h3>Form 3 Transfer</h3>
+                    <ul>
+                        <li>Junior Certificate of Education (JCE)</li>
+                        <li>Previous school transcript</li>
+                        <li>Transfer letter</li>
+                        <li>Good conduct certificate</li>
+                    </ul>
+                </div>
+                <div class="requirement-card">
+                    <div class="requirement-icon">💰</div>
+                    <h3>Financial Requirements</h3>
+                    <ul>
+                        <li>Registration fee: MWK 5,000</li>
+                        <li>School fees vary by form</li>
+                        <li>Uniform and books</li>
+                        <li>Payment plans available</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Application Form -->
+    <section class="application-form-section">
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Application Form</h2>
+                    <p>Fill out this form to begin your journey with us. All fields marked with * are required.</p>
+                </div>
+                
+                <form class="admission-form" id="admissionForm">
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <h3>Personal Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name *</label>
+                                <input type="text" id="firstName" name="firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name *</label>
+                                <input type="text" id="lastName" name="lastName" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dateOfBirth">Date of Birth *</label>
+                                <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">Gender *</label>
+                                <select id="gender" name="gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="nationality">Nationality *</label>
+                            <input type="text" id="nationality" name="nationality" value="Malawian" required>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <h3>Contact Information</h3>
+                        <div class="form-group">
+                            <label for="address">Home Address *</label>
+                            <textarea id="address" name="address" rows="3" required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Information -->
+                    <div class="form-section">
+                        <h3>Academic Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="applyingFor">Applying for Form *</label>
+                                <select id="applyingFor" name="applyingFor" required>
+                                    <option value="">Select Form</option>
+                                    <option value="form1">Form 1</option>
+                                    <option value="form2">Form 2</option>
+                                    <option value="form3">Form 3</option>
+                                    <option value="form4">Form 4</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="academicYear">Academic Year *</label>
+                                <select id="academicYear" name="academicYear" required>
+                                    <option value="">Select Year</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="previousSchool">Previous School *</label>
+                            <input type="text" id="previousSchool" name="previousSchool" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="preferredTrack">Preferred Academic Track</label>
+                            <select id="preferredTrack" name="preferredTrack">
+                                <option value="">Select Track (For Forms 3-4)</option>
+                                <option value="science">Science Track</option>
+                                <option value="commerce">Commerce Track</option>
+                                <option value="arts">Arts Track</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Parent/Guardian Information -->
+                    <div class="form-section">
+                        <h3>Parent/Guardian Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="guardianName">Parent/Guardian Name *</label>
+                                <input type="text" id="guardianName" name="guardianName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="relationship">Relationship *</label>
+                                <select id="relationship" name="relationship" required>
+                                    <option value="">Select Relationship</option>
+                                    <option value="father">Father</option>
+                                    <option value="mother">Mother</option>
+                                    <option value="guardian">Guardian</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="guardianPhone">Phone Number *</label>
+                                <input type="tel" id="guardianPhone" name="guardianPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="guardianEmail">Email Address</label>
+                                <input type="email" id="guardianEmail" name="guardianEmail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="occupation">Occupation</label>
+                            <input type="text" id="occupation" name="occupation">
+                        </div>
+                    </div>
+
+                    <!-- Medical Information -->
+                    <div class="form-section">
+                        <h3>Medical Information</h3>
+                        <div class="form-group">
+                            <label for="allergies">Known Allergies or Medical Conditions</label>
+                            <textarea id="allergies" name="allergies" rows="3" placeholder="Please list any allergies, medical conditions, or special needs we should be aware of..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="emergencyContact">Emergency Contact Name & Phone *</label>
+                            <input type="text" id="emergencyContact" name="emergencyContact" placeholder="Name: Phone Number" required>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div class="form-section">
+                        <h3>Additional Information</h3>
+                        <div class="form-group">
+                            <label for="extracurricular">Extracurricular Interests</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="interests" value="sports"> Sports</label>
+                                <label><input type="checkbox" name="interests" value="drama"> Drama/Theatre</label>
+                                <label><input type="checkbox" name="interests" value="music"> Music</label>
+                                <label><input type="checkbox" name="interests" value="debate"> Debate</label>
+                                <label><input type="checkbox" name="interests" value="science"> Science Club</label>
+                                <label><input type="checkbox" name="interests" value="art"> Art</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="whyChoose">Why do you want to join J & J Secondary School?</label>
+                            <textarea id="whyChoose" name="whyChoose" rows="4" placeholder="Tell us why you want to be part of our school community..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Documents Upload -->
+                    <div class="form-section">
+                        <h3>Required Documents</h3>
+                        <div class="upload-info">
+                            <p>Please bring the following documents when submitting your application:</p>
+                            <ul>
+                                <li>✓ Birth Certificate (Original & Copy)</li>
+                                <li>✓ Primary School Leaving Certificate/JCE (Original & Copy)</li>
+                                <li>✓ Previous school transcript</li>
+                                <li>✓ 2 Passport-size photographs</li>
+                                <li>✓ Medical certificate</li>
+                                <li>✓ Transfer letter (if applicable)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="form-section">
+                        <div class="terms-section">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="terms" name="terms" required>
+                                <span class="checkmark"></span>
+                                I agree to the <a href="#" target="_blank">Terms and Conditions</a> and confirm that all information provided is accurate and complete. *
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-submit">
+                        <button type="submit" class="btn btn-primary submit-btn">Submit Application</button>
+                        <p class="submit-note">After submitting this form, please visit the school office with the required documents to complete your application.</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Next Steps -->
+    <section class="next-steps">
+        <div class="container">
+            <div class="section-header">
+                <h2>What Happens Next?</h2>
+                <p>Follow these steps after submitting your application</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Document Verification</h3>
+                    <p>Visit our office within 7 days with original documents for verification.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Interview</h3>
+                    <p>Attend a brief interview with the student and parent/guardian (if required).</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Admission Decision</h3>
+                    <p>Receive admission decision within 14 days via phone call or email.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>Enrollment</h3>
+                    <p>Complete enrollment process including fee payment and uniform purchase.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Info -->
+    <section class="contact-admissions">
+        <div class="container">
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h3>Admissions Office</h3>
+                    <div class="contact-item">
+                        <span class="icon">📍</span>
+                        <div>
+                            <strong>Visit Us:</strong><br>
+                            M1, Chifundo, Mpemba, Blantyre, Malawi
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="icon">📞</span>
+                        <div>
+                            <strong>Call Us:</strong><br>
+                            +265888342707 | +265998280218
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="icon">📧</span>
+                        <div>
+                            <strong>Email:</strong><br>
+                            contact@domain.com
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <span class="icon">🕒</span>
+                        <div>
+                            <strong>Office Hours:</strong><br>
+                            Monday - Friday: 8:00 AM - 5:00 PM<br>
+                            Saturday: 8:00 AM - 12:00 PM
+                        </div>
+                    </div>
+                </div>
+                <div class="office-hours">
+                    <h3>Important Dates</h3>
+                    <div class="dates-list">
+                        <div class="date-item">
+                            <strong>Application Deadline:</strong>
+                            <span>December 15, 2024</span>
+                        </div>
+                        <div class="date-item">
+                            <strong>Entrance Exam:</strong>
+                            <span>January 10, 2025</span>
+                        </div>
+                        <div class="date-item">
+                            <strong>Results Announcement:</strong>
+                            <span>January 25, 2025</span>
+                        </div>
+                        <div class="date-item">
+                            <strong>School Reopening:</strong>
+                            <span>February 5, 2025</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>J & J Secondary School</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin diam justo, scelerisque non felis porta, placerat vestibulum nisi.</p>
+                    <p><strong>The Arena of a Winner</strong></p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="index.html">Home</a>
+                    <a href="index.html#about">About Us</a>
+                    <a href="index.html#programs">Academic Programs</a>
+                    <a href="admissions.html">Admissions</a>
+                    <a href="administration.html">Administration</a>
+                    <a href="index.html#contact">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Academic Programs</h3>
+                    <a href="#">Form 1-2 (Junior Secondary)</a>
+                    <a href="#">Form 3-4 (Senior Secondary)</a>
+                    <a href="#">Science Track</a>
+                    <a href="#">Commerce Track</a>
+                    <a href="#">Arts Track</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Info</h3>
+                    <p>📍 M1, Chifundo, Mpemba, Blantyre, Malawi</p>
+                    <p>📞 +265888342707 | +265998280218</p>
+                    <p>📧 contact@domain.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 J & J Secondary School. All rights reserved. | Designed with excellence in mind.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="admissions.js"></script>
+</body>
+</html>
