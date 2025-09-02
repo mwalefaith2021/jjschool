@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J-J Secondary School - Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c59 50%, #6b8e23 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: #fffef7;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 600px;
+        }
+
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 600px;
+            padding: 40px;
+        }
+
+        .auth-form {
+            background: #fffef7;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .school-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .logo-image {
+            width: 100px;
+            height: 80px;
+            border-radius: 100%;
+            display: flex;
+            justify-content: center;
+            color: #4a7c59;
+            font-size: 0.9em;
+            font-weight: normal;
+            box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-image::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #6b8e23, #4a7c59, #2d5016, #6b8e23);
+            border-radius: 50%;
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .logo-text {
+            text-align: left;
+        }
+
+        .school-logo h1 {
+            color: #2d5016;
+            font-size: 2.2em;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .school-logo p {
+            color: #4a7c59;
+            font-size: 1em;
+            font-style: italic;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-image {
+            width: 50px;
+            height: 50px;
+            background: #f8fdf8;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.8em;
+            font-weight: normal;
+        }
+
+        .header-text h1 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .header-text p {
+            font-size: 0.9em;
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d5016;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e8f5e8;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background: #fffef7;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4a7c59;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c59 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 20px;
+            color: #4a7c59;
+        }
+
+        .switch-form a {
+            color: #2d5016;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+
+        .dashboard {
+            display: none;
+            min-height: 100vh;
+            background: #fffef7;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c59 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .dashboard-content {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        .sidebar {
+            background: #f8fdf8;
+            width: 250px;
+            padding: 30px 0;
+            border-right: 1px solid #e8f5e8;
+        }
+
+        .nav-item {
+            padding: 15px 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+            color: #2d5016;
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #4a7c59;
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            background: #fffef7;
+            min-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .content-section {
+            display: none;
+            min-height: 500px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(45, 80, 22, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4a7c59;
+        }
+
+        .card h2 {
+            color: #2d5016;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: #f8fdf8;
+            border-radius: 10px;
+            border-left: 4px solid #4a7c59;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: #2d5016;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-item span {
+            color: #4a7c59;
+            font-size: 1.1em;
+        }
+
+        .fee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #f8fdf8;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #6b8e23;
+        }
+
+        .fee-item.overdue {
+            border-left-color: #dc3545;
+        }
+
+        .pay-btn {
+            background: #6b8e23;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .pay-btn:hover {
+            background: #5a7c1b;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .students-table th,
+        .students-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e8f5e8;
+        }
+
+        .students-table th {
+            background: #f8fdf8;
+            font-weight: 600;
+            color: #2d5016;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 0.9em;
+        }
+
+        .approve-btn {
+            background: #6b8e23;
+            color: white;
+        }
+
+        .reject-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .view-btn {
+            background: #4a7c59;
+            color: white;
+        }
+
+        .balance-positive {
+            color: #6b8e23;
+            font-weight: 600;
+        }
+
+        .balance-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .payment-form {
+            background: #f8fdf8;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .payment-form h3 {
+            margin-bottom: 20px;
+            color: #2d5016;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .signup-form {
+            display: none;
+        }
+
+        .signup-form.active {
+            display: block;
+        }
+
+        .login-form.hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 20px;
+            }
+            
+            .auth-form {
+                padding: 30px 20px;
+            }
+            
+            .logo-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .logo-text {
+                text-align: center;
+            }
+            
+            .school-logo h1 {
+                font-size: 1.8em;
+            }
+            
+            .dashboard-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                display: flex;
+                overflow-x: auto;
+                padding: 0;
+                border-right: none;
+                border-bottom: 1px solid #e8f5e8;
+            }
+            
+            .nav-item {
+                white-space: nowrap;
+                min-width: 120px;
+                text-align: center;
+                padding: 15px 20px;
+            }
+            
+            .main-content {
+                padding: 20px;
+                min-height: calc(100vh - 140px);
+            }
+            
+            .payment-info-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .detail-label {
+                min-width: auto;
+            }
+            
+            .detail-value {
+                text-align: left;
+            }
+            
+            .profile-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .fee-item {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .students-table {
+                font-size: 0.9em;
+            }
+            
+            .students-table th,
+            .students-table td {
+                padding: 10px 8px;
+            }
+            
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 0.8em;
+                margin: 2px;
+            }
+            
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .header-logo {
+                gap: 10px;
+            }
+            
+            .header-text h1 {
+                font-size: 1.3em;
+            }
+            
+            .header-text p {
+                font-size: 0.8em;
+            }
+            
+            .signup-item {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                max-width: 95%;
+                margin: 20px auto;
+            }
+            
+            .auth-form {
+                max-width: 500px;
+            }
+            
+            .main-content {
+                padding: 30px;
+            }
+            
+            .profile-info {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+            
+            .students-table {
+                font-size: 0.95em;
+            }
+            
+            .sidebar {
+                width: 220px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .container {
+                max-width: 1400px;
+            }
+            
+            .profile-info {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+            
+            .form-row {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        .demo-credentials {
+            background: #f8fdf8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e8f5e8;
+        }
+
+        .demo-credentials h4 {
+            color: #2d5016;
+            margin-bottom: 10px;
+        }
+
+        .demo-credentials p {
+            color: #4a7c59;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .pending-signups {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .pending-signups h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .payment-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .payment-method-card {
+            background: #f8fdf8;
+            border: 2px solid #e8f5e8;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .payment-method-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(45, 80, 22, 0.15);
+        }
+
+        .payment-method-header {
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c59 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+
+        .payment-method-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+        .payment-details {
+            padding: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8f5e8;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #2d5016;
+            min-width: 120px;
+        }
+
+        .detail-value {
+            color: #4a7c59;
+            text-align: right;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .payment-notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .payment-notice h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .payment-notice ul {
+            color: #856404;
+            margin-left: 20px;
+        }
+
+        .payment-notice li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login/Signup Page -->
+    <div class="container" id="authPage">
+        <div class="auth-container">
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm">
+                <div class="school-logo">
+                    <div class="logo-container">
+                        <div class="logo-image">
+                            <img src="images/Jandjlogo.png" alt="J-J Secondary School"  href="./">
+                        </div>
+                        <div class="logo-text">
+                            <h1>J-J Secondary School</h1>
+                            <p>Excellence in Education</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="demo-credentials">
+                    <h4>Demo Login Credentials</h4>
+                    <p><strong>Student:</strong> john.doe / student123</p>
+                    <p><strong>Admin:</strong> admin / admin123</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userType">Login As:</label>
+                    <select id="userType" required>
+                        <option value="">Select User Type</option>
+                        <option value="student">Student/Parent</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Username/Student ID:</label>
+                    <input type="text" id="username" required placeholder="Enter your username or student ID">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="auth-btn">Login</button>
+                
+                <div class="switch-form">
+                    <p>Don't have an account? <a href="#" onclick="showSignupForm()">Sign Up</a></p>
+                </div>
+            </form>
+
+            <!-- Signup Form -->
+            <form class="auth-form signup-form" id="signupForm">
+                <div class="school-logo">
+                    <div class="logo-container">
+                        <div class="logo-image">
+                            [School Logo]
+                        </div>
+                        <div class="logo-text">
+                            <h1>J Secondary School</h1>
+                            <p>Create New Account</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupUserType">Account Type:</label>
+                    <select id="signupUserType" required>
+                        <option value="">Select Account Type</option>
+                        <option value="student">Student/Parent</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fullName">Full Name:</label>
+                    <input type="text" id="fullName" required placeholder="Enter full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" required placeholder="Enter email address">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" required placeholder="Enter phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="desiredUsername">Desired Username:</label>
+                    <input type="text" id="desiredUsername" required placeholder="Choose a username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupPassword">Password:</label>
+                    <input type="password" id="signupPassword" required placeholder="Create a password">
+                </div>
+                
+                <div class="form-group">
+                    <label for="grade">Intended Grade/Class:</label>
+                    <select id="grade" required>
+                        <option value="">Select Grade</option>
+                        <option value="8">Grade 8</option>
+                        <option value="9">Grade 9</option>
+                        <option value="10">Grade 10</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="auth-btn">Submit Application</button>
+                
+                <div class="switch-form">
+                    <p>Already have an account? <a href="#" onclick="showLoginForm()">Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div class="dashboard" id="studentDashboard">
+        <div class="header">
+            <div class="header-logo">
+                <div class="header-logo-image">
+                    [Logo]
+                </div>
+                <div class="header-text">
+                    <h1>Student Portal - J Secondary School</h1>
+                    <p>Excellence in Education</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="sidebar">
+                <div class="nav-item active" onclick="showSection('student', 'profile')">Profile</div>
+                <div class="nav-item" onclick="showSection('student', 'fees')">Fees & Payments</div>
+                <div class="nav-item" onclick="showSection('student', 'payment')">Make Payment</div>
+                <div class="nav-item" onclick="showSection('student', 'bank-details')">Payment Info</div>
+            </div>
+            
+            <div class="main-content">
+                <!-- Profile Section -->
+                <div class="content-section active" id="student-profile">
+                    <div class="card">
+                        <h2>Student Profile</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <label>Student ID:</label>
+                                <span id="studentId">JS2024001</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Full Name:</label>
+                                <span id="studentName">John Doe</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Class:</label>
+                                <span id="studentClass">Grade 10A</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Date of Birth:</label>
+                                <span id="studentDob">15/03/2008</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Parent/Guardian:</label>
+                                <span id="parentName">Jane Doe</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Contact Number:</label>
+                                <span id="contactNumber">+267 12345678</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email:</label>
+                                <span id="studentEmail">john.doe@email.com</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Address:</label>
+                                <span id="studentAddress">123 Main Street, Gaborone</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fees Section -->
+                <div class="content-section" id="student-fees">
+                    <div class="card">
+                        <h2>Fees & Balance</h2>
+                        <div class="fee-item">
+                            <div>
+                                <h4>Tuition Fees - Term 1</h4>
+                                <p>Due Date: 31/03/2025</p>
+                            </div>
+                            <div>
+                                <span style="font-size: 1.2em; font-weight: bold;">MK 2,500</span>
+                                <button class="pay-btn" onclick="initiatePayment('tuition-term1', 2500)">Pay Now</button>
+                            </div>
+                        </div>
+                        
+                        <div class="fee-item overdue">
+                            <div>
+                                <h4>Laboratory Fees</h4>
+                                <p>Due Date: 15/02/2025 (Overdue)</p>
+                            </div>
+                            <div>
+                                <span style="font-size: 1.2em; font-weight: bold;">MK 500</span>
+                                <button class="pay-btn" onclick="initiatePayment('lab-fees', 500)">Pay Now</button>
+                            </div>
+                        </div>
+                        
+                        <div class="fee-item">
+                            <div>
+                                <h4>Sports & Activities</h4>
+                                <p>Due Date: 30/04/2025</p>
+                            </div>
+                            <div>
+                                <span style="font-size: 1.2em; font-weight: bold;">MK 300</span>
+                                <button class="pay-btn" onclick="initiatePayment('sports-fees', 300)">Pay Now</button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; padding: 20px; background: #f8fdf8; border-radius: 10px;">
+                            <h3>Account Balance</h3>
+                            <p style="font-size: 1.5em; font-weight: bold; color: #dc3545;">Outstanding: MK 3,300</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Section -->
+                <div class="content-section" id="student-payment">
+                    <div class="card">
+                        <h2>Make Payment</h2>
+                        <div class="payment-form">
+                            <h3>Payment Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Payment Type:</label>
+                                    <select id="paymentType">
+                                        <option>Tuition Fees</option>
+                                        <option>Laboratory Fees</option>
+                                        <option>Sports & Activities</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Amount (MK):</label>
+                                    <input type="number" id="paymentAmount" placeholder="0.00">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Payment Method:</label>
+                                    <select id="paymentMethod">
+                                        <option>Airtel Money</option>
+                                        <option>TNM Mpamba</option>
+                                        <option>Visa Card</option>
+                                        <option>Mastercard</option>
+                                        <option>Bank Transfer</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Reference Number:</label>
+                                    <input type="text" id="referenceNumber" placeholder="Optional">
+                                </div>
+                            </div>
+                            
+                            <button class="pay-btn" style="margin-top: 20px;" onclick="processPayment()">Submit Payment</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Information Section -->
+                <div class="content-section" id="student-bank-details">
+                    <div class="card">
+                        <h2>Payment Information</h2>
+                        <div class="payment-info-grid">
+                            <!-- Bank Transfer -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>🏦 Bank Transfer</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Bank Name:</span>
+                                        <span class="detail-value">Standard Bank Malawi</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Name:</span>
+                                        <span class="detail-value">J Secondary School</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Number:</span>
+                                        <span class="detail-value">9100012345</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Branch:</span>
+                                        <span class="detail-value">Lilongwe City Centre</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Sort Code:</span>
+                                        <span class="detail-value">910001</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Airtel Money -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>📱 Airtel Money</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Merchant Code:</span>
+                                        <span class="detail-value">JSS001</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Business Number:</span>
+                                        <span class="detail-value">300001</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Steps:</span>
+                                        <span class="detail-value">
+                                            1. Dial *150*01#<br>
+                                            2. Select "Pay Bills"<br>
+                                            3. Enter Merchant Code: JSS001<br>
+                                            4. Enter Amount & Reference
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TNM Mpamba -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>💳 TNM Mpamba</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Paybill Number:</span>
+                                        <span class="detail-value">150150</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Business Number:</span>
+                                        <span class="detail-value">400002</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Steps:</span>
+                                        <span class="detail-value">
+                                            1. Dial *444*1#<br>
+                                            2. Select "Pay Bills"<br>
+                                            3. Enter Paybill: 150150<br>
+                                            4. Enter Amount & Student ID
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- National Bank -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>🏛️ National Bank of Malawi</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Name:</span>
+                                        <span class="detail-value">J Secondary School Fees</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Number:</span>
+                                        <span class="detail-value">1000987654</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Branch:</span>
+                                        <span class="detail-value">Lilongwe Main Branch</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Swift Code:</span>
+                                        <span class="detail-value">NBMAMWMW</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-notice">
+                            <h3>⚠️ Important Payment Instructions</h3>
+                            <ul>
+                                <li>Always use your Student ID as the payment reference</li>
+                                <li>Keep your payment receipt/confirmation for verification</li>
+                                <li>Payment processing may take 24-48 hours to reflect in your account</li>
+                                <li>Contact the school office for any payment-related queries</li>
+                                <li>School Office: +265 1 123 456 | Email: payments@jsecondary.edu.mw</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="dashboard" id="adminDashboard">
+        <div class="header">
+            <div class="header-logo">
+                <div class="header-logo-image">
+                    [Logo]
+                </div>
+                <div class="header-text">
+                    <h1>Administrator Portal - J Secondary School</h1>
+                    <p>Excellence in Education</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="sidebar">
+                <div class="nav-item active" onclick="showSection('admin', 'students')">Student Management</div>
+                <div class="nav-item" onclick="showSection('admin', 'applications')">Applications</div>
+                <div class="nav-item" onclick="showSection('admin', 'signups')">Pending Signups</div>
+                <div class="nav-item" onclick="showSection('admin', 'fees')">Fee Management</div>
+                <div class="nav-item" onclick="showSection('admin', 'reports')">Reports</div>
+            </div>
+            
+            <div class="main-content">
+                <!-- Students Management Section -->
+                <div class="content-section active" id="admin-students">
+                    <div class="card">
+                        <h2>Student Management</h2>
+                        <table class="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Class</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>JS2024001</td>
+                                    <td>John Doe</td>
+                                    <td>Grade 10A</td>
+                                    <td><span class="balance-negative">-MK 3,300</span></td>
+                                    <td><span class="status-badge status-pending">Pending Payment</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024001')">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>JS2024002</td>
+                                    <td>Sarah Smith</td>
+                                    <td>Grade 11B</td>
+                                    <td><span class="balance-positive">MK 0</span></td>
+                                    <td><span class="status-badge status-approved">Up to Date</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024002')">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>JS2024003</td>
+                                    <td>Michael Johnson</td>
+                                    <td>Grade 9C</td>
+                                    <td><span class="balance-negative">-MK 1,200</span></td>
+                                    <td><span class="status-badge status-pending">Pending Payment</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024003')">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Applications Section -->
+                <div class="content-section" id="admin-applications">
+                    <div class="card">
+                        <h2>Student Applications</h2>
+                        <table class="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Application ID</th>
+                                    <th>Student Name</th>
+                                    <th>Applied Class</th>
+                                    <th>Application Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>APP2025001</td>
+                                    <td>Emma Wilson</td>
+                                    <td>Grade 8A</td>
+                                    <td>20/08/2025</td>
+                                    <td><span class="status-badge status-pending">Pending Review</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025001')">View</button>
+                                        <button class="action-btn approve-btn" onclick="approveApplication('APP2025001')">Approve</button>
+                                        <button class="action-btn reject-btn" onclick="rejectApplication('APP2025001')">Reject</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>APP2025002</td>
+                                    <td>David Brown</td>
+                                    <td>Grade 10B</td>
+                                    <td>18/08/2025</td>
+                                    <td><span class="status-badge status-approved">Approved</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025002')">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>APP2025003</td>
+                                    <td>Lisa Garcia</td>
+                                    <td>Grade 9A</td>
+                                    <td>15/08/2025</td>
+                                    <td><span class="status-badge status-rejected">Rejected</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025003')">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pending Signups Section -->
+                <div class="content-section" id="admin-signups">
+                    <div class="card">
+                        <h2>Pending Account Signups</h2>
+                        <div class="pending-signups">
+                            <h3>New Account Requests</h3>
+                            <div id="signupsList">
+                                <!-- Pending signups will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fee Management Section -->
+                <div class="content-section" id="admin-fees">
+                    <div class="card">
+                        <h2>Fee Management Overview</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <label>Total Outstanding Fees:</label>
+                                <span style="color: #dc3545; font-weight: bold;">MK 45,600</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Collected This Month:</label>
+                                <span style="color: #6b8e23; font-weight: bold;">MK 125,400</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Students with Overdue Fees:</label>
+                                <span style="color: #dc3545; font-weight: bold;">23 Students</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Payment Compliance:</label>
+                                <span style="color: #6b8e23; font-weight: bold;">87%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reports Section -->
+                <div class="content-section" id="admin-reports">
+                    <div class="card">
+                        <h2>Reports & Analytics</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <label>Total Enrolled Students:</label>
+                                <span>456 Students</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Pending Applications:</label>
+                                <span>12 Applications</span>
+                            </div>
+                            <div class="info-item">
+                                <label>This Month's Revenue:</label>
+                                <span style="color: #6b8e23; font-weight: bold;">MK 125,400</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Average Fee Collection Time:</label>
+                                <span>8.5 days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data with Malawi details
+        const studentData = {
+            'john.doe': {
+                password: 'student123',
+                profile: {
+                    studentId: 'JS2024001',
+                    name: 'John Doe',
+                    class: 'Grade 10A',
+                    dob: '15/03/2008',
+                    parent: 'Jane Doe',
+                    contact: '+265 991 234 567',
+                    email: 'john.doe@email.com',
+                    address: '123 Main Street, Lilongwe'
+                }
+            }
+        };
+
+        const adminData = {
+            'admin': {
+                password: 'admin123'
+            }
+        };
+
+        // Array to store pending signups
+        let pendingSignups = [];
+
+        // Show/Hide forms
+        function showSignupForm() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.add('active');
+        }
+
+        function showLoginForm() {
+            document.getElementById('signupForm').classList.remove('active');
+            document.getElementById('loginForm').classList.remove('hidden');
+        }
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userType = document.getElementById('userType').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!userType) {
+                alert('Please select a user type');
+                return;
+            }
+            
+            if (userType === 'student') {
+                if (studentData[username] && studentData[username].password === password) {
+                    showDashboard('student');
+                    loadStudentData(username);
+                } else {
+                    alert('Invalid credentials. Please check your username and password.');
+                }
+            } else if (userType === 'admin') {
+                if (adminData[username] && adminData[username].password === password) {
+                    showDashboard('admin');
+                    displayPendingSignups();
+                } else {
+                    alert('Invalid admin credentials. Please check your username and password.');
+                }
+            }
+        });
+
+        // Signup functionality
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const username = document.getElementById('desiredUsername').value;
+            const password = document.getElementById('signupPassword').value;
+            const grade = document.getElementById('grade').value;
+            
+            // Create signup object
+            const signup = {
+                id: 'SIGNUP' + Date.now(),
+                fullName: fullName,
+                email: email,
+                phone: phone,
+                desiredUsername: username,
+                password: password,
+                grade: grade,
+                applicationDate: new Date().toLocaleDateString(),
+                status: 'pending'
+            };
+            
+            // Add to pending signups
+            pendingSignups.push(signup);
+            
+            // Reset form and show success message
+            document.getElementById('signupForm').reset();
+            alert('Account application submitted successfully! Your application will be reviewed by the administrator. You will be notified once approved.');
+            
+            // Switch back to login form
+            showLoginForm();
+        });
+
+        function showDashboard(userType) {
+            document.getElementById('authPage').style.display = 'none';
+            if (userType === 'student') {
+                document.getElementById('studentDashboard').classList.add('active');
+            } else if (userType === 'admin') {
+                document.getElementById('adminDashboard').classList.add('active');
+            }
+        }
+
+        function loadStudentData(username) {
+            const student = studentData[username];
+            if (student) {
+                document.getElementById('studentId').textContent = student.profile.studentId;
+                document.getElementById('studentName').textContent = student.profile.name;
+                document.getElementById('studentClass').textContent = student.profile.class;
+                document.getElementById('studentDob').textContent = student.profile.dob;
+                document.getElementById('parentName').textContent = student.profile.parent;
+                document.getElementById('contactNumber').textContent = student.profile.contact;
+                document.getElementById('studentEmail').textContent = student.profile.email;
+                document.getElementById('studentAddress').textContent = student.profile.address;
+            }
+        }
+
+        function displayPendingSignups() {
+            const signupsList = document.getElementById('signupsList');
+            
+            if (pendingSignups.length === 0) {
+                signupsList.innerHTML = '<p style="color: #4a7c59; font-style: italic;">No pending account signups.</p>';
+                return;
+            }
+            
+            let html = '';
+            pendingSignups.forEach(signup => {
+                if (signup.status === 'pending') {
+                    html += `
+                        <div class="signup-item">
+                            <div>
+                                <h4 style="color: #2d5016;">${signup.fullName}</h4>
+                                <p><strong>Email:</strong> ${signup.email}</p>
+                                <p><strong>Phone:</strong> ${signup.phone}</p>
+                                <p><strong>Desired Username:</strong> ${signup.desiredUsername}</p>
+                                <p><strong>Grade:</strong> Grade ${signup.grade}</p>
+                                <p><strong>Applied:</strong> ${signup.applicationDate}</p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="action-btn approve-btn" onclick="approveSignup('${signup.id}')">Approve</button>
+                                <button class="action-btn reject-btn" onclick="rejectSignup('${signup.id}')">Reject</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            signupsList.innerHTML = html;
+        }
+
+        function approveSignup(signupId) {
+            const signup = pendingSignups.find(s => s.id === signupId);
+            if (signup) {
+                if (confirm(`Approve account for ${signup.fullName}?`)) {
+                    // Add to student data
+                    studentData[signup.desiredUsername] = {
+                        password: signup.password,
+                        profile: {
+                            studentId: 'JS' + Date.now(),
+                            name: signup.fullName,
+                            class: `Grade ${signup.grade}A`,
+                            dob: 'Not provided',
+                            parent: 'Not provided',
+                            contact: signup.phone,
+                            email: signup.email,
+                            address: 'Not provided'
+                        }
+                    };
+                    
+                    // Mark as approved
+                    signup.status = 'approved';
+                    
+                    alert(`Account approved for ${signup.fullName}. Login credentials:\nUsername: ${signup.desiredUsername}\nPassword: ${signup.password}`);
+                    displayPendingSignups();
+                }
+            }
+        }
+
+        function rejectSignup(signupId) {
+            const signup = pendingSignups.find(s => s.id === signupId);
+            if (signup) {
+                const reason = prompt(`Reason for rejecting ${signup.fullName}'s application:`);
+                if (reason) {
+                    signup.status = 'rejected';
+                    signup.rejectionReason = reason;
+                    alert(`Account application rejected for ${signup.fullName}. Reason: ${reason}`);
+                    displayPendingSignups();
+                }
+            }
+        }
+
+        function logout() {
+            document.getElementById('authPage').style.display = 'flex';
+            document.getElementById('studentDashboard').classList.remove('active');
+            document.getElementById('adminDashboard').classList.remove('active');
+            document.getElementById('loginForm').reset();
+            showLoginForm();
+        }
+
+        function showSection(userType, sectionName) {
+            // Remove active class from all nav items
+            const navItems = document.querySelectorAll(`#${userType}Dashboard .nav-item`);
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            // Add active class to clicked nav item
+            event.target.classList.add('active');
+            
+            // Hide all content sections
+            const sections = document.querySelectorAll(`#${userType}Dashboard .content-section`);
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(`${userType}-${sectionName}`).classList.add('active');
+            
+            // If showing signups section, refresh the list
+            if (sectionName === 'signups') {
+                displayPendingSignups();
+            }
+        }
+
+        function initiatePayment(feeType, amount) {
+            const paymentSection = document.getElementById('student-payment');
+            paymentSection.classList.add('active');
+            
+            // Hide other sections
+            document.querySelectorAll('#studentDashboard .content-section').forEach(section => {
+                if (section.id !== 'student-payment') {
+                    section.classList.remove('active');
+                }
+            });
+            
+            // Update nav
+            document.querySelectorAll('#studentDashboard .nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('#studentDashboard .nav-item')[2].classList.add('active');
+            
+            // Pre-fill payment form
+            document.getElementById('paymentAmount').value = amount;
+        }
+
+        function processPayment() {
+            const amount = document.getElementById('paymentAmount').value;
+            const type = document.getElementById('paymentType').value;
+            const method = document.getElementById('paymentMethod').value;
+            const reference = document.getElementById('referenceNumber').value;
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid payment amount');
+                return;
+            }
+            
+            if (!type || !method) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Generate a payment reference if not provided
+            const paymentRef = reference || `PAY${Date.now()}`;
+            
+            alert(`Payment Details:
+Amount: P ${amount}
+Type: ${type}
+Method: ${method}
+Reference: ${paymentRef}
+
+Payment submitted successfully! You will receive a confirmation email shortly.`);
+            
+            // Clear the form
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('referenceNumber').value = '';
+        }
+
+        function viewStudent(studentId) {
+            alert(`Viewing detailed profile for student ${studentId}`);
+        }
+
+        function viewApplication(applicationId) {
+            alert(`Viewing application details for ${applicationId}`);
+        }
+
+        function approveApplication(applicationId) {
+            if (confirm(`Are you sure you want to approve application ${applicationId}?`)) {
+                alert(`Application ${applicationId} has been approved. Student will be notified.`);
+                updateApplicationStatus(applicationId, 'approved');
+            }
+        }
+
+        function rejectApplication(applicationId) {
+            const reason = prompt(`Please provide a reason for rejecting application ${applicationId}:`);
+            if (reason) {
+                alert(`Application ${applicationId} has been rejected. Reason: ${reason}. Applicant will be notified.`);
+                updateApplicationStatus(applicationId, 'rejected');
+            }
+        }
+
+        function updateApplicationStatus(applicationId, status) {
+            // Find the row with the application ID and update its status
+            const rows = document.querySelectorAll('#admin-applications tbody tr');
+            rows.forEach(row => {
+                const idCell = row.cells[0];
+                if (idCell.textContent === applicationId) {
+                    const statusCell = row.cells[4];
+                    const actionsCell = row.cells[5];
+                    
+                    // Update status badge
+                    if (status === 'approved') {
+                        statusCell.innerHTML = '<span class="status-badge status-approved">Approved</span>';
+                        actionsCell.innerHTML = `<button class="action-btn view-btn" onclick="viewApplication('${applicationId}')">View</button>`;
+                    } else if (status === 'rejected') {
+                        statusCell.innerHTML = '<span class="status-badge status-rejected">Rejected</span>';
+                        actionsCell.innerHTML = `<button class="action-btn view-btn" onclick="viewApplication('${applicationId}')">View</button>`;
+                    }
+                }
+            });
+        }
+
+        // Add some sample pending signups for demonstration with Malawi details
+        setTimeout(() => {
+            pendingSignups.push({
+                id: 'SIGNUP001',
+                fullName: 'Alice Johnson',
+                email: 'alice.johnson@email.com',
+                phone: '+265 999 876 543',
+                desiredUsername: 'alice.johnson',
+                password: 'alice123',
+                grade: '9',
+                applicationDate: '26/08/2025',
+                status: 'pending'
+            });
+            
+            pendingSignups.push({
+                id: 'SIGNUP002',
+                fullName: 'Bob Wilson',
+                email: 'bob.wilson@email.com',
+                phone: '+265 888 765 432',
+                desiredUsername: 'bob.wilson',
+                password: 'bob123',
+                grade: '11',
+                applicationDate: '25/08/2025',
+                status: 'pending'
+            });
+        }, 1000);
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('J Secondary School Portal initialized');
+        });
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return `P ${amount.toLocaleString()}`;
+        }
+
+        function sendFeeReminder(studentId) {
+            if (confirm(`Send fee payment reminder to student ${studentId}?`)) {
+                alert(`Fee reminder sent to student ${studentId} via email and SMS`);
+            }
+        }
+
+        function exportStudentData(format) {
+            alert(`Exporting student data in ${format} format. Download will start shortly.`);
+        }
+
+        function generateReport(reportType) {
+            alert(`${reportType} report generated successfully. Download will start shortly.`);
+        }
+
+        // Update contact information to reflect Malawi
+        function loadStudentData(username) {
+            const student = studentData[username];
+            if (student) {
+                document.getElementById('studentId').textContent = student.profile.studentId;
+                document.getElementById('studentName').textContent = student.profile.name;
+                document.getElementById('studentClass').textContent = student.profile.class;
+                document.getElementById('studentDob').textContent = student.profile.dob;
+                document.getElementById('parentName').textContent = student.profile.parent;
+                document.getElementById('contactNumber').textContent = student.profile.contact;
+                document.getElementById('studentEmail').textContent = student.profile.email;
+                document.getElementById('studentAddress').textContent = student.profile.address;
+            }
+        }
+    </script>
+</body>
+</html>
