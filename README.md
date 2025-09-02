@@ -1,0 +1,2 @@
+# jjschool
+A school website
