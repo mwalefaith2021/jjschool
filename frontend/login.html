@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J & J Secondary School - Portal</title>
+     <link rel="stylesheet" href="dash.css">
+</head>
+<body>
+
+    <!-- Login/Signup Page -->
+    <div class="container" id="authPage">
+        <div class="auth-container">
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm">
+                <div class="school-logo">
+                    <div class="logo-container">
+                        <div class="logo-image">
+                            <img src="images/Jandjlogo.png" alt="J-J Secondary School"  href="./">
+                        </div>
+                        <div class="logo-text">
+                            <h1>J-J Secondary School</h1>
+                            <p>Excellence in Education</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="demo-credentials">
+                    <h4>Demo Login Credentials</h4>
+                    <p><strong>Student:</strong> john.doe / student123</p>
+                    <p><strong>Admin:</strong> admin / admin123</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userType">Login As:</label>
+                    <select id="userType" required>
+                        <option value="">Select User Type</option>
+                        <option value="student">Student/Parent</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Username/Student ID:</label>
+                    <input type="text" id="username" required placeholder="Enter your username or student ID">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="auth-btn">Login</button>
+                
+                <div class="switch-form">
+                    <p>Don't have an account? <a href="signup.html" onclick="showSignupForm()">Sign Up</a></p>
+                </div>
+            </form>
+
+    <script src="dash.js"></script>
+</body>
+</html>

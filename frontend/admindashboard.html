@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J & J Secondary School</title>
+    <link rel="stylesheet" href="dash.css">
+</head>
+<body>
+
+<!-- Admin Dashboard -->
+    <div class="dashboard" id="adminDashboard">
+        <div class="header">
+            <div class="header-logo">
+                <div class="header-logo-image">
+                  <img src="images/Jandjlogo.png" alt="J-J Secondary School"  href="./">
+                </div>
+                <div class="header-text">
+                    <h1>Administrator Portal - J Secondary School</h1>
+                    <p>Excellence in Education</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="sidebar">
+                <div class="nav-item active" onclick="showSection('admin', 'students')">Student Management</div>
+                <div class="nav-item" onclick="showSection('admin', 'applications')">Applications</div>
+                <div class="nav-item" onclick="showSection('admin', 'signups')">Pending Signups</div>
+                <div class="nav-item" onclick="showSection('admin', 'fees')">Fee Management</div>
+                <div class="nav-item" onclick="showSection('admin', 'reports')">Reports</div>
+            </div>
+            
+            <div class="main-content">
+                <!-- Students Management Section -->
+                <div class="content-section active" id="admin-students">
+                    <div class="card">
+                        <h2>Student Management</h2>
+                        <table class="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Class</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>JS2024001</td>
+                                    <td>John Doe</td>
+                                    <td>Grade 10A</td>
+                                    <td><span class="balance-negative">-MK 3,300</span></td>
+                                    <td><span class="status-badge status-pending">Pending Payment</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024001')">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>JS2024002</td>
+                                    <td>Sarah Smith</td>
+                                    <td>Grade 11B</td>
+                                    <td><span class="balance-positive">MK 0</span></td>
+                                    <td><span class="status-badge status-approved">Up to Date</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024002')">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>JS2024003</td>
+                                    <td>Michael Johnson</td>
+                                    <td>Grade 9C</td>
+                                    <td><span class="balance-negative">-MK 1,200</span></td>
+                                    <td><span class="status-badge status-pending">Pending Payment</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024003')">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+  <!-- Applications Section -->
+   <div class="content-section" id="admin-applications">
+      <div class="card">
+         <h2>Student Applications</h2>
+                <table class="students-table">
+                     <thead>
+                                <tr>
+                                    <th>Application ID</th>
+                                    <th>Student Name</th>
+                                    <th>Applied Class</th>
+                                    <th>Application Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                     <tbody>
+                         <tr>
+                           <td>APP2025001</td>
+                                    <td>Emma Wilson</td>
+                                    <td>Grade 8A</td>
+                                    <td>20/08/2025</td>
+                                    <td><span class="status-badge status-pending">Pending Review</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025001')">View</button>
+                                        <button class="action-btn approve-btn" onclick="approveApplication('APP2025001')">Approve</button>
+                                        <button class="action-btn reject-btn" onclick="rejectApplication('APP2025001')">Reject</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>APP2025002</td>
+                                    <td>David Brown</td>
+                                    <td>Grade 10B</td>
+                                    <td>18/08/2025</td>
+                                    <td><span class="status-badge status-approved">Approved</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025002')">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>APP2025003</td>
+                                    <td>Lisa Garcia</td>
+                                    <td>Grade 9A</td>
+                                    <td>15/08/2025</td>
+                                    <td><span class="status-badge status-rejected">Rejected</span></td>
+                                    <td>
+                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025003')">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+<!-- Pending Signups Section -->
+                <div class="content-section" id="admin-signups">
+                    <div class="card">
+                        <h2>Pending Account Signups</h2>
+                        <div class="pending-signups">
+                            <h3>New Account Requests</h3>
+                            <div id="signupsList">
+                                <!-- Pending signups will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+                
+<!-- Fee Management Section -->
+                <div class="content-section" id="admin-fees">
+                    <div class="card">
+                        <h2>Fee Management Overview</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <label>Total Outstanding Fees:</label>
+                                <span style="color: #dc3545; font-weight: bold;">MK 45,600</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Collected This Month:</label>
+                                <span style="color: #6b8e23; font-weight: bold;">MK 125,400</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Students with Overdue Fees:</label>
+                                <span style="color: #dc3545; font-weight: bold;">23 Students</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Payment Compliance:</label>
+                                <span style="color: #6b8e23; font-weight: bold;">87%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>       
+                
+<!-- Reports Section -->
+                <div class="content-section" id="admin-reports">
+                    <div class="card">
+                        <h2>Reports & Analytics</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <label>Total Enrolled Students:</label>
+                                <span>456 Students</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Pending Applications:</label>
+                                <span>12 Applications</span>
+                            </div>
+                            <div class="info-item">
+                                <label>This Month's Revenue:</label>
+                                <span style="color: #6b8e23; font-weight: bold;">MK 125,400</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Average Fee Collection Time:</label>
+                                <span>8.5 days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>              
+
+
+<script src="dash.js"></script>
+</body>
+</html>

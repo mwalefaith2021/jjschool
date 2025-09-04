@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J & J Secondary School</title>
+    <link rel="stylesheet" href="dash.css">
+</head>
+<body>
+
+ <!-- Student Dashboard -->
+    <div class="dashboard" id="studentDashboard">
+        <div class="header">
+            <div class="header-logo">
+                <div class="header-logo-image">
+                 <img src="images/Jandjlogo.png" alt="J-J Secondary School"  href="./">
+                </div>
+                <div class="header-text">
+                    <h1>Student Portal J & J Secondary School</h1>
+                    <p>Excellence in Education</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="sidebar">
+                <div class="nav-item active" onclick="showSection('student', 'profile')">Profile</div>
+                <div class="nav-item" onclick="showSection('student', 'fees')">Fees & Payments</div>
+                <div class="nav-item" onclick="showSection('student', 'payment')">Make Payment</div>
+                <div class="nav-item" onclick="showSection('student', 'bank-details')">Payment Info</div>
+            </div>
+            
+            <div class="main-content">
+                <!-- Profile Section -->
+                <div class="content-section active" id="student-profile">
+                    <div class="card">
+                        <h2>Student Profile</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <label>Student ID:</label>
+                                <span id="studentId">JS2024001</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Full Name:</label>
+                                <span id="studentName">John Doe</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Class:</label>
+                                <span id="studentClass">Grade 10A</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Date of Birth:</label>
+                                <span id="studentDob">15/03/2008</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Parent/Guardian:</label>
+                                <span id="parentName">Jane Doe</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Contact Number:</label>
+                                <span id="contactNumber">+267 12345678</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email:</label>
+                                <span id="studentEmail">john.doe@email.com</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Address:</label>
+                                <span id="studentAddress">123 Main Street, Gaborone</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fees Section -->
+                <div class="content-section" id="student-fees">
+                    <div class="card">
+                        <h2>Fees & Balance</h2>
+                        <div class="fee-item">
+                            <div>
+                                <h4>Tuition Fees - Term 1</h4>
+                                <p>Due Date: 31/03/2025</p>
+                            </div>
+                            <div>
+                                <span style="font-size: 1.2em; font-weight: bold;">MK 2,500</span>
+                                <button class="pay-btn" onclick="initiatePayment('tuition-term1', 2500)">Pay Now</button>
+                            </div>
+                        </div>
+                        
+                        <div class="fee-item overdue">
+                            <div>
+                                <h4>Laboratory Fees</h4>
+                                <p>Due Date: 15/02/2025 (Overdue)</p>
+                            </div>
+                            <div>
+                                <span style="font-size: 1.2em; font-weight: bold;">MK 500</span>
+                                <button class="pay-btn" onclick="initiatePayment('lab-fees', 500)">Pay Now</button>
+                            </div>
+                        </div>
+                        
+                        <div class="fee-item">
+                            <div>
+                                <h4>Sports & Activities</h4>
+                                <p>Due Date: 30/04/2025</p>
+                            </div>
+                            <div>
+                                <span style="font-size: 1.2em; font-weight: bold;">MK 300</span>
+                                <button class="pay-btn" onclick="initiatePayment('sports-fees', 300)">Pay Now</button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; padding: 20px; background: #f8fdf8; border-radius: 10px;">
+                            <h3>Account Balance</h3>
+                            <p style="font-size: 1.5em; font-weight: bold; color: #dc3545;">Outstanding: MK 3,300</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Section -->
+                <div class="content-section" id="student-payment">
+                    <div class="card">
+                        <h2>Make Payment</h2>
+                        <div class="payment-form">
+                            <h3>Payment Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Payment Type:</label>
+                                    <select id="paymentType">
+                                        <option>Tuition Fees</option>
+                                        <option>Laboratory Fees</option>
+                                        <option>Sports & Activities</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Amount (MK):</label>
+                                    <input type="number" id="paymentAmount" placeholder="0.00">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Payment Method:</label>
+                                    <select id="paymentMethod">
+                                        <option>Airtel Money</option>
+                                        <option>TNM Mpamba</option>
+                                        <option>Visa Card</option>
+                                        <option>Mastercard</option>
+                                        <option>Bank Transfer</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Reference Number:</label>
+                                    <input type="text" id="referenceNumber" placeholder="Optional">
+                                </div>
+                            </div>
+                            
+                            <button class="pay-btn" style="margin-top: 20px;" onclick="processPayment()">Submit Payment</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Information Section -->
+                <div class="content-section" id="student-bank-details">
+                    <div class="card">
+                        <h2>Payment Information</h2>
+                        <div class="payment-info-grid">
+                            <!-- Bank Transfer -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>🏦 Bank Transfer</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Bank Name:</span>
+                                        <span class="detail-value">Standard Bank Malawi</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Name:</span>
+                                        <span class="detail-value">J Secondary School</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Number:</span>
+                                        <span class="detail-value">9100012345</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Branch:</span>
+                                        <span class="detail-value">Lilongwe City Centre</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Sort Code:</span>
+                                        <span class="detail-value">910001</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Airtel Money -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>📱 Airtel Money</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Merchant Code:</span>
+                                        <span class="detail-value">JSS001</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Business Number:</span>
+                                        <span class="detail-value">300001</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Steps:</span>
+                                        <span class="detail-value">
+                                            1. Dial *150*01#<br>
+                                            2. Select "Pay Bills"<br>
+                                            3. Enter Merchant Code: JSS001<br>
+                                            4. Enter Amount & Reference
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TNM Mpamba -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>💳 TNM Mpamba</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Paybill Number:</span>
+                                        <span class="detail-value">150150</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Business Number:</span>
+                                        <span class="detail-value">400002</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Steps:</span>
+                                        <span class="detail-value">
+                                            1. Dial *444*1#<br>
+                                            2. Select "Pay Bills"<br>
+                                            3. Enter Paybill: 150150<br>
+                                            4. Enter Amount & Student ID
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- National Bank -->
+                            <div class="payment-method-card">
+                                <div class="payment-method-header">
+                                    <h3>🏛️ National Bank of Malawi</h3>
+                                </div>
+                                <div class="payment-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Name:</span>
+                                        <span class="detail-value">J Secondary School Fees</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Account Number:</span>
+                                        <span class="detail-value">1000987654</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Branch:</span>
+                                        <span class="detail-value">Lilongwe Main Branch</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Swift Code:</span>
+                                        <span class="detail-value">NBMAMWMW</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-notice">
+                            <h3>⚠️ Important Payment Instructions</h3>
+                            <ul>
+                                <li>Always use your Student ID as the payment reference</li>
+                                <li>Keep your payment receipt/confirmation for verification</li>
+                                <li>Payment processing may take 24-48 hours to reflect in your account</li>
+                                <li>Contact the school office for any payment-related queries</li>
+                                <li>School Office: +265 1 123 456 | Email: payments@jsecondary.edu.mw</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script src="dash.js"></script>
+</body>
+</html>
