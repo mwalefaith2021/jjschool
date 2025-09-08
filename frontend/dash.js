@@ -1,15 +1,15 @@
-// Sample data with Malawi details
+// Sample student data 
 const studentData = {
-    'john.doe': {
-        password: 'student123',
+    'josh.doe': {
+        password: '123',
         profile: {
             studentId: 'JS2024001',
-            name: 'John Doe',
-            class: 'Grade 10A',
+            name: 'Josh Doe',
+            class: 'Form 4A',
             dob: '15/03/2008',
             parent: 'Jane Doe',
             contact: '+265 991 234 567',
-            email: 'john.doe@email.com',
+            email: 'josh.doe@email.com',
             address: '123 Main Street, Lilongwe'
         }
     }
@@ -17,7 +17,7 @@ const studentData = {
 
 const adminData = {
     'admin': {
-        password: 'admin123'
+        password: '1'
     }
 };
 
@@ -391,22 +391,22 @@ function initializeSampleData() {
         {
             id: 'SIGNUP001',
             fullName: 'Faith Mwale',
-            email: 'fm@email.com',
+            email: 'fm@gmail.com',
             phone: '+265 999 876 543',
             desiredUsername: 'faith.mwale',
             password: 'faith123',
-            grade: '9',
+            form: '9',
             applicationDate: '26/08/2025',
             status: 'pending'
         },
         {
             id: 'SIGNUP002',
-            fullName: 'Bob Wilson',
-            email: 'bob.wilson@email.com',
+            fullName: 'Joey Wilson',
+            email: 'joey.wilson@email.com',
             phone: '+265 888 765 432',
-            desiredUsername: 'bob.wilson',
-            password: 'bob123',
-            grade: '11',
+            desiredUsername: 'joey.wilson',
+            password: 'joey123',
+            form: '2',
             applicationDate: '25/08/2025',
             status: 'pending'
         }
