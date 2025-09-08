@@ -13,7 +13,9 @@
             <nav>
                 <div class="logo-section">
                     <div class="logo-placeholder">
+                      <a href="index.html">
                         <img src="images/Jandjlogo.png" alt="School Logo">
+                      </a>
                     </div>
                     <div class="school-info">
                         <h1>J & J Secondary School</h1>
@@ -27,6 +29,11 @@
                     <li><a href="admissions.html" class="active">Admissions</a></li>
                     <li><a href="index.html#contact">Contact</a></li>
                 </ul>
+               <!-- <div class="hamburger-menu">
+                   <a href="index.html">Home</a>
+                   <a href="index.html">Home</a>
+                   <a href="index.html">Home</a>
+                </div>-->
             </nav>
         </div>
     </header>
@@ -82,7 +89,7 @@
                     <p>Fill out this form to begin your journey with us. All fields marked with * are required.</p>
                 </div>
                 
-                <form class="admission-form" id="admissionForm">
+                <form class="admission-form" id="admissionForm" action="/api/submit-application" method="POST">
                     <!-- Personal Information -->
                     <div class="form-section">
                         <h3>Personal Information</h3>
@@ -166,9 +173,10 @@
                             <label for="preferredTrack">Preferred Academic Track</label>
                             <select id="preferredTrack" name="preferredTrack">
                                 <option value="">Select Track (For Forms 3-4)</option>
-                                <option value="science">Science Track</option>
-                                <option value="commerce">Commerce Track</option>
-                                <option value="arts">Arts Track</option>
+                                <option value="science">Form 1</option>
+                                <option value="commerce">Form 2</option>
+                                <option value="arts">Form 3</option>
+                                <option value="arts">Form 4</option>
                             </select>
                         </div>
                     </div>
@@ -223,21 +231,18 @@
 
                     <!-- Additional Information -->
                     <div class="form-section">
-                        <h3>Additional Information</h3>
+                        <h3>Application fee</h3>
                         <div class="form-group">
-                            <label for="extracurricular">Extracurricular Interests</label>
+                            <label for="extracurricular">Payment option</label>
                             <div class="checkbox-group">
-                                <label><input type="checkbox" name="interests" value="sports"> Sports</label>
-                                <label><input type="checkbox" name="interests" value="drama"> Drama/Theatre</label>
-                                <label><input type="checkbox" name="interests" value="music"> Music</label>
-                                <label><input type="checkbox" name="interests" value="debate"> Debate</label>
-                                <label><input type="checkbox" name="interests" value="science"> Science Club</label>
-                                <label><input type="checkbox" name="interests" value="art"> Art</label>
+                                <label><input type="checkbox" name="interests" value="sports"> Airtel money</label>
+                                <label><input type="checkbox" name="interests" value="drama"> Tnm</label>
+                                <label><input type="checkbox" name="interests" value="music"> Bank</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="whyChoose">Why do you want to join J & J Secondary School?</label>
-                            <textarea id="whyChoose" name="whyChoose" rows="4" placeholder="Tell us why you want to be part of our school community..."></textarea>
+                            <label for="whyChoose">Reference *</label>
+                            <input type="whyChoose" name="whyChoose" rows="4" placeholder="Write the reference for your application fee..">
                         </div>
                     </div>
 
@@ -253,6 +258,7 @@
                                 <li>✓ 2 Passport-size photographs</li>
                                 <li>✓ Medical certificate</li>
                                 <li>✓ Transfer letter (if applicable)</li>
+                                 <li>✓ K5000 application fee</li>
                             </ul>
                         </div>
                     </div>
@@ -377,7 +383,8 @@
             <div class="footer-grid">
                 <div class="footer-section">
                     <h3>J & J Secondary School</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin diam justo, scelerisque non felis porta, placerat vestibulum nisi.</p>
+                    <p>Welcome to J and J Secondary School, where we're dedicated to shaping tomorrow's leaders through quality education, innovation, and a commitment to excellence. Here, we prepare our students for a world driven by technology and inspired by the values of resilience, discipline, and maturity.
+                     The Arena of a Winner.</p>
                     <p><strong>The Arena of a Winner</strong></p>
                 </div>
                 <div class="footer-section">
@@ -393,9 +400,6 @@
                     <h3>Academic Programs</h3>
                     <a href="#">Form 1-2 (Junior Secondary)</a>
                     <a href="#">Form 3-4 (Senior Secondary)</a>
-                    <a href="#">Science Track</a>
-                    <a href="#">Commerce Track</a>
-                    <a href="#">Arts Track</a>
                 </div>
                 <div class="footer-section">
                     <h3>Contact Info</h3>
@@ -410,7 +414,6 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
     <script src="admissions.js"></script>
 </body>
 </html>

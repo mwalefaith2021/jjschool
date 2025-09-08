@@ -98,7 +98,7 @@ window.addEventListener('scroll', function() {
 });
 
 // Mobile menu toggle (if you want to add mobile menu later)
-const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+const mobileMenuToggle = document.getElementById('menu-toggle');
 const navLinks = document.querySelector('.nav-links');
 
 if (mobileMenuToggle) {
@@ -177,3 +177,7 @@ const counterSection = document.querySelector('.counters');
 if (counterSection) {
     counterObserver.observe(counterSection);
 }
+
+menuToggle.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+});

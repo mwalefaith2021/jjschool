@@ -3,20 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J & J Secondary School</title>
+    <title>J & J Secondary School - Admin Dashboard</title>
     <link rel="stylesheet" href="dash.css">
 </head>
 <body>
+    <!-- Back to Home Button -->
+    <a href="index.html" class="back-to-home">Back to Home</a>
 
-<!-- Admin Dashboard -->
-    <div class="dashboard" id="adminDashboard">
+    <!-- Admin Dashboard -->
+    <div class="dashboard active">
         <div class="header">
             <div class="header-logo">
                 <div class="header-logo-image">
-                  <img src="images/Jandjlogo.png" alt="J-J Secondary School"  href="./">
+                  <a href="index.html">
+                    <img src="images/Jandjlogo.png">
+                  </a>
                 </div>
                 <div class="header-text">
-                    <h1>Administrator Portal - J Secondary School</h1>
+                    <h1>Administrator Portal - J & J Secondary School</h1>
                     <p>Excellence in Education</p>
                 </div>
             </div>
@@ -84,12 +88,12 @@
                     </div>
                 </div>
                 
-  <!-- Applications Section -->
-   <div class="content-section" id="admin-applications">
-      <div class="card">
-         <h2>Student Applications</h2>
-                <table class="students-table">
-                     <thead>
+                <!-- Applications Section -->
+                <div class="content-section" id="admin-applications">
+                    <div class="card">
+                        <h2>Student Applications</h2>
+                        <table class="students-table">
+                            <thead>
                                 <tr>
                                     <th>Application ID</th>
                                     <th>Student Name</th>
@@ -99,9 +103,9 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                     <tbody>
-                         <tr>
-                           <td>APP2025001</td>
+                            <tbody>
+                                <tr>
+                                    <td>APP2025001</td>
                                     <td>Emma Wilson</td>
                                     <td>Grade 8A</td>
                                     <td>20/08/2025</td>
@@ -137,7 +141,7 @@
                     </div>
                 </div>
 
-<!-- Pending Signups Section -->
+                <!-- Pending Signups Section -->
                 <div class="content-section" id="admin-signups">
                     <div class="card">
                         <h2>Pending Account Signups</h2>
@@ -148,9 +152,9 @@
                             </div>
                         </div>
                     </div>
-                </div>                
+                </div>
                 
-<!-- Fee Management Section -->
+                <!-- Fee Management Section -->
                 <div class="content-section" id="admin-fees">
                     <div class="card">
                         <h2>Fee Management Overview</h2>
@@ -173,9 +177,9 @@
                             </div>
                         </div>
                     </div>
-                </div>       
+                </div>
                 
-<!-- Reports Section -->
+                <!-- Reports Section -->
                 <div class="content-section" id="admin-reports">
                     <div class="card">
                         <h2>Reports & Analytics</h2>
@@ -201,9 +205,8 @@
                 </div>
             </div>
         </div>
-    </div>              
+    </div>
 
-
-<script src="dash.js"></script>
+    <script src="dash.js"></script>
 </body>
 </html>

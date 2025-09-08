@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('admissionForm');
     const submitBtn = document.querySelector('.submit-btn');
     
+document.querySelector('.hamburger-menu').addEventListener('click', () => {
+    document.querySelector('.nav-links').classList.toggle('active');
+});
+
     // Form submission handler
     form.addEventListener('submit', function(e) {
         e.preventDefault();

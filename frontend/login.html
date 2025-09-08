@@ -3,23 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J & J Secondary School - Portal</title>
-     <link rel="stylesheet" href="dash.css">
+    <title>J & J Secondary School - Login</title>
+    <link rel="stylesheet" href="dash.css">
 </head>
 <body>
+    <!-- Back to Home Button -->
+    <a href="index.html" class="back-to-home">Back to Home</a>
 
-    <!-- Login/Signup Page -->
-    <div class="container" id="authPage">
+    <!-- Login Page -->
+    <div class="container">
         <div class="auth-container">
             <!-- Login Form -->
             <form class="auth-form" id="loginForm">
                 <div class="school-logo">
                     <div class="logo-container">
                         <div class="logo-image">
-                            <img src="images/Jandjlogo.png" alt="J-J Secondary School"  href="./">
+                          <a href="index.html">
+                            <img src="images/Jandjlogo.png">
+                          </a>
                         </div>
                         <div class="logo-text">
-                            <h1>J-J Secondary School</h1>
+                            <h1>J & J Secondary School</h1>
                             <p>Excellence in Education</p>
                         </div>
                     </div>
@@ -52,11 +56,36 @@
                 
                 <button type="submit" class="auth-btn">Login</button>
                 
-                <div class="switch-form">
-                    <p>Don't have an account? <a href="signup.html" onclick="showSignupForm()">Sign Up</a></p>
-                </div>
+               <!--<div class="switch-form">
+                    <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+                </div>-->
             </form>
+        </div>
+    </div>
 
     <script src="dash.js"></script>
+    <script>
+        // Login form handling
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userType = document.getElementById('userType').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!userType) {
+                alert('Please select a user type');
+                return;
+            }
+            
+            if (!username || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Call the login function from shared scripts
+            loginUser(userType, username, password);
+        });
+    </script>
 </body>
 </html>

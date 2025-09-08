@@ -3,20 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J & J Secondary School</title>
+    <title>J & J Secondary School - Student Dashboard</title>
     <link rel="stylesheet" href="dash.css">
 </head>
 <body>
+    <!-- Back to Home Button -->
+    <a href="index.html" class="back-to-home">Back to Home</a>
 
- <!-- Student Dashboard -->
-    <div class="dashboard" id="studentDashboard">
+    <!-- Student Dashboard -->
+    <div class="dashboard active">
         <div class="header">
             <div class="header-logo">
                 <div class="header-logo-image">
-                 <img src="images/Jandjlogo.png" alt="J-J Secondary School"  href="./">
+                  <a href="index.html">
+                    <img src="images/Jandjlogo.png">
+                  </a>
                 </div>
                 <div class="header-text">
-                    <h1>Student Portal J & J Secondary School</h1>
+                    <h1>Student Portal - J & J Secondary School</h1>
                     <p>Excellence in Education</p>
                 </div>
             </div>
@@ -59,7 +63,7 @@
                             </div>
                             <div class="info-item">
                                 <label>Contact Number:</label>
-                                <span id="contactNumber">+267 12345678</span>
+                                <span id="contactNumber">+265 991 234 567</span>
                             </div>
                             <div class="info-item">
                                 <label>Email:</label>
@@ -67,7 +71,7 @@
                             </div>
                             <div class="info-item">
                                 <label>Address:</label>
-                                <span id="studentAddress">123 Main Street, Gaborone</span>
+                                <span id="studentAddress">123 Main Street, Lilongwe</span>
                             </div>
                         </div>
                     </div>
@@ -289,7 +293,6 @@
         </div>
     </div>
 
-
-<script src="dash.js"></script>
+    <script src="dash.js"></script>
 </body>
 </html>
