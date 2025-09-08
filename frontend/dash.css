@@ -79,7 +79,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
     margin-bottom: 15px;
     gap: 15px;
 }
@@ -720,7 +719,7 @@ body {
     }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1024px) {
     .container {
         max-width: 95%;
         margin: 20px auto;
@@ -728,7 +727,6 @@ body {
     
     .auth-form {
         max-width: 500px;
-        margin: auto;
     }
     
     .main-content {
