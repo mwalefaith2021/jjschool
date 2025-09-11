@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="admissions.css">
 </head>
 <body>
-    <!-- Header -->
     <header>
             <nav>
                 <div class="logo-section">
@@ -29,16 +28,10 @@
                     <li><a href="admissions.html" class="active">Admissions</a></li>
                     <li><a href="index.html#contact">Contact</a></li>
                 </ul>
-               <!-- <div class="hamburger-menu">
-                   <a href="index.html">Home</a>
-                   <a href="index.html">Home</a>
-                   <a href="index.html">Home</a>
-                </div>-->
-            </nav>
+               </nav>
         </div>
     </header>
 
-    <!-- Admission Requirements -->
     <section class="admission-requirements">
         <div class="container">
             <div class="section-header">
@@ -52,7 +45,6 @@
                     <ul>
                         <li>Primary School Leaving Certificate (PSLCE)</li>
                         <li>Minimum of 5 credits</li>
-                        <li>Age: 13-15 years</li>
                         <li>Birth certificate</li>
                     </ul>
                 </div>
@@ -70,7 +62,7 @@
                     <div class="requirement-icon">💰</div>
                     <h3>Financial Requirements</h3>
                     <ul>
-                        <li>Registration fee: MWK 5,000</li>
+                        <li>Application fee: MWK 5,000</li>
                         <li>School fees vary by form</li>
                         <li>Uniform and books</li>
                         <li>Payment plans available</li>
@@ -80,7 +72,6 @@
         </div>
     </section>
 
-    <!-- Application Form -->
     <section class="application-form-section">
         <div class="container">
             <div class="form-container">
@@ -89,8 +80,7 @@
                     <p>Fill out this form to begin your journey with us. All fields marked with * are required.</p>
                 </div>
                 
-                <form class="admission-form" id="admissionForm" action="/api/submit-application" method="POST">
-                    <!-- Personal Information -->
+                <form class="admission-form" id="admissionForm">
                     <div class="form-section">
                         <h3>Personal Information</h3>
                         <div class="form-row">
@@ -119,11 +109,10 @@
                         </div>
                         <div class="form-group">
                             <label for="nationality">Nationality *</label>
-                            <input type="text" id="nationality" name="nationality" value="Malawian" required>
+                            <input type="text" id="nationality" name="nationality" value="" required>
                         </div>
                     </div>
 
-                    <!-- Contact Information -->
                     <div class="form-section">
                         <h3>Contact Information</h3>
                         <div class="form-group">
@@ -137,12 +126,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="email">Email Address</label>
-                                <input type="email" id="email" name="email">
+                                <input type="email" id="email" name="email" required>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Academic Information -->
                     <div class="form-section">
                         <h3>Academic Information</h3>
                         <div class="form-row">
@@ -166,22 +154,16 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="previousSchool">Previous School *</label>
+                            <label for="previousSchool">Previous School*</label>
                             <input type="text" id="previousSchool" name="previousSchool" required>
                         </div>
-                        <div class="form-group">
-                            <label for="preferredTrack">Preferred Academic Track</label>
-                            <select id="preferredTrack" name="preferredTrack">
-                                <option value="">Select Track (For Forms 3-4)</option>
-                                <option value="science">Form 1</option>
-                                <option value="commerce">Form 2</option>
-                                <option value="arts">Form 3</option>
-                                <option value="arts">Form 4</option>
-                            </select>
-                        </div>
+                         <div class="form-group">
+                           <label for="documentUpload">Upload Required Documents*</label>
+                                 <input type="file" id="documentUpload" name="documentUpload" multiple accept=".pdf,.doc,.docx,.jpg,.png" required>
+                                 <small>Accepted file types: PDF, DOC, DOCX, JPG, PNG. You can select multiple files.</small>
+                         </div>
                     </div>
 
-                    <!-- Parent/Guardian Information -->
                     <div class="form-section">
                         <h3>Parent/Guardian Information</h3>
                         <div class="form-row">
@@ -216,7 +198,6 @@
                         </div>
                     </div>
 
-                    <!-- Medical Information -->
                     <div class="form-section">
                         <h3>Medical Information</h3>
                         <div class="form-group">
@@ -229,41 +210,39 @@
                         </div>
                     </div>
 
-                    <!-- Additional Information -->
                     <div class="form-section">
                         <h3>Application fee</h3>
                         <div class="form-group">
-                            <label for="extracurricular">Payment option</label>
+                            <label for="paymentMethod">Payment option</label>
                             <div class="checkbox-group">
-                                <label><input type="checkbox" name="interests" value="sports"> Airtel money</label>
-                                <label><input type="checkbox" name="interests" value="drama"> Tnm</label>
-                                <label><input type="checkbox" name="interests" value="music"> Bank</label>
+                                <label><input type="checkbox" name="paymentMethod" value="airtel"> Airtel money</label>
+                                <label><input type="checkbox" name="paymentMethod" value="tnm"> Tnm</label>
+                                <label><input type="checkbox" name="paymentMethod" value="bank"> Bank</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="whyChoose">Reference *</label>
-                            <input type="whyChoose" name="whyChoose" rows="4" placeholder="Write the reference for your application fee..">
+                            <label for="reference">Reference *</label>
+                            <input type="text" id="reference" name="reference" placeholder="Write the reference for your application fee..." required>
                         </div>
                     </div>
 
-                    <!-- Documents Upload -->
                     <div class="form-section">
                         <h3>Required Documents</h3>
                         <div class="upload-info">
-                            <p>Please bring the following documents when submitting your application:</p>
+                            <p>Please make sure you have uploaded the following documents when submitting your application:</p>
                             <ul>
-                                <li>✓ Birth Certificate (Original & Copy)</li>
-                                <li>✓ Primary School Leaving Certificate/JCE (Original & Copy)</li>
+                                <li>✓ Birth Certificate (Original & Certified Copy)</li>
+                                <li>✓ Primary School Leaving Certificate/JCE (Original & Certified Copy)</li>
                                 <li>✓ Previous school transcript</li>
                                 <li>✓ 2 Passport-size photographs</li>
                                 <li>✓ Medical certificate</li>
+                                <li>✓ Certified Id / Passport original & Certified Copy (if applicable)</li>
                                 <li>✓ Transfer letter (if applicable)</li>
                                  <li>✓ K5000 application fee</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- Terms and Conditions -->
                     <div class="form-section">
                         <div class="terms-section">
                             <label class="checkbox-label">
@@ -274,17 +253,15 @@
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
                     <div class="form-submit">
                         <button type="submit" class="btn btn-primary submit-btn">Submit Application</button>
-                        <p class="submit-note">After submitting this form, please visit the school office with the required documents to complete your application.</p>
+                        <p id="form-status" style="margin-top: 15px; font-weight: bold;"></p>
                     </div>
                 </form>
             </div>
         </div>
     </section>
 
-    <!-- Next Steps -->
     <section class="next-steps">
         <div class="container">
             <div class="section-header">
@@ -316,7 +293,6 @@
         </div>
     </section>
 
-    <!-- Contact Info -->
     <section class="contact-admissions">
         <div class="container">
             <div class="contact-grid">
@@ -377,14 +353,13 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-section">
                     <h3>J & J Secondary School</h3>
                     <p>Welcome to J and J Secondary School, where we're dedicated to shaping tomorrow's leaders through quality education, innovation, and a commitment to excellence. Here, we prepare our students for a world driven by technology and inspired by the values of resilience, discipline, and maturity.
-                     The Arena of a Winner.</p>
+                    The Arena of a Winner.</p>
                     <p><strong>The Arena of a Winner</strong></p>
                 </div>
                 <div class="footer-section">
@@ -405,7 +380,7 @@
                     <h3>Contact Info</h3>
                     <p>📍 M1, Chifundo, Mpemba, Blantyre, Malawi</p>
                     <p>📞 +265888342707 | +265998280218</p>
-                    <p>📧 contact@domain.com</p>
+                    <p>📧 admin@jandjschoolsmw.com</p>
                 </div>
             </div>
             <div class="footer-bottom">

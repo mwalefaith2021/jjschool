@@ -62,7 +62,7 @@ body {
 }
 
 .auth-form {
-    background: #f5f3ec;
+    background: #f3f5ec;
     padding: 40px;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -84,18 +84,16 @@ body {
 }
 
 .logo-image {
-    width: 100px;
-    height: 100px;
+    max-width: 100px;
+    max-height: 100px;
     background: #f6f6f6;
-    border: 3px solid #4a7c59;
     border-radius: 50%;
     display: flex;
     justify-content: center;
-    color: #4a7c59;
+    align-items: center;
     font-size: 0.9em;
     font-weight: normal;
     box-shadow: 0 4px 15px rgba(2, 34, 12, 0.3);
-    position: relative;
     overflow: hidden;
 }
 
@@ -106,10 +104,14 @@ body {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, #03491c, #6b8e23);
     border-radius: 50%;
     z-index: -1;
     animation: rotate 3s linear infinite;
+}
+.logo-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* The key property to make the image fit */
 }
 
 @keyframes rotate {
@@ -152,7 +154,7 @@ body {
     border-radius: 10px;
     font-size: 16px;
     transition: border-color 0.3s;
-    background: #fffef7;
+    background: #fbfaf6;
 }
 
 .form-group input:focus, .form-group select:focus {

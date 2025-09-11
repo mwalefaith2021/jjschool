@@ -7,8 +7,6 @@
     <link rel="stylesheet" href="dash.css">
 </head>
 <body>
-    <!-- Back to Home Button -->
-
 
     <!-- Login Page -->
     <div class="container">
@@ -18,9 +16,9 @@
                 <div class="school-logo">
                     <div class="logo-container">
                         <div class="logo-image">
-                          <a href="index.html">
-                            <img src="images/Jandjlogo.png">
-                          </a>
+                            <a href="index.html">
+                                <img src="images/Jandjlogo.png">
+                            </a>
                         </div>
                         <div class="logo-text">
                             <h1>J & J Secondary School</h1>
@@ -63,7 +61,8 @@
         </div>
     </div>
 
-    <script src="dash.js"></script>
+   <script src="admin.js"></script>
+    <script src="student.js"></script>
     <script>
         // Login form handling
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -83,8 +82,14 @@
                 return;
             }
             
-            // Call the login function from shared scripts
-            loginUser(userType, username, password);
+            // Call the correct login function based on user type
+            if (userType === 'admin') {
+                loginAdminUser(username, password);
+            } else if (userType === 'student') {
+                loginStudentUser(username, password);
+            } else {
+                alert('Invalid user type selected.');
+            }
         });
     </script>
 </body>
