@@ -41,49 +41,20 @@
                 <div class="content-section active" id="admin-students">
                     <div class="card">
                         <h2>Student Management</h2>
+                        <div id="studentsToolbar" style="display:flex; gap:10px; margin-bottom:12px;">
+                            <input id="studentSearch" placeholder="Search by name or email" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;" />
+                            <button class="action-btn" onclick="loadStudents()">Refresh</button>
+                        </div>
                         <table class="students-table">
                             <thead>
                                 <tr>
-                                    <th>Student ID</th>
                                     <th>Name</th>
-                                    <th>Class</th>
-                                    <th>Balance</th>
-                                    <th>Status</th>
+                                    <th>Email</th>
+                                    <th>Username</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>JS2024001</td>
-                                    <td>John Doe</td>
-                                    <td>Grade 10A</td>
-                                    <td><span class="balance-negative">-MK 3,300</span></td>
-                                    <td><span class="status-badge status-pending">Pending Payment</span></td>
-                                    <td>
-                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024001')">View</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>JS2024002</td>
-                                    <td>Sarah Smith</td>
-                                    <td>Grade 11B</td>
-                                    <td><span class="balance-positive">MK 0</span></td>
-                                    <td><span class="status-badge status-approved">Up to Date</span></td>
-                                    <td>
-                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024002')">View</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>JS2024003</td>
-                                    <td>Michael Johnson</td>
-                                    <td>Grade 9C</td>
-                                    <td><span class="balance-negative">-MK 1,200</span></td>
-                                    <td><span class="status-badge status-pending">Pending Payment</span></td>
-                                    <td>
-                                        <button class="action-btn view-btn" onclick="viewStudent('JS2024003')">View</button>
-                                    </td>
-                                </tr>
-                            </tbody>
+                            <tbody id="studentsTbody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -92,7 +63,7 @@
                 <div class="content-section" id="admin-applications">
                     <div class="card">
                         <h2>Student Applications</h2>
-                        <table class="students-table">
+                        <table class="students-table" id="applicationsTable">
                             <thead>
                                 <tr>
                                     <th>Application ID</th>
@@ -103,39 +74,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>APP2025001</td>
-                                    <td>Emma Wilson</td>
-                                    <td>Grade 8A</td>
-                                    <td>20/08/2025</td>
-                                    <td><span class="status-badge status-pending">Pending Review</span></td>
-                                    <td>
-                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025001')">View</button>
-                                        <button class="action-btn approve-btn" onclick="approveApplication('APP2025001')">Approve</button>
-                                        <button class="action-btn reject-btn" onclick="rejectApplication('APP2025001')">Reject</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>APP2025002</td>
-                                    <td>David Brown</td>
-                                    <td>Grade 10B</td>
-                                    <td>18/08/2025</td>
-                                    <td><span class="status-badge status-approved">Approved</span></td>
-                                    <td>
-                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025002')">View</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>APP2025003</td>
-                                    <td>Lisa Garcia</td>
-                                    <td>Grade 9A</td>
-                                    <td>15/08/2025</td>
-                                    <td><span class="status-badge status-rejected">Rejected</span></td>
-                                    <td>
-                                        <button class="action-btn view-btn" onclick="viewApplication('APP2025003')">View</button>
-                                    </td>
-                                </tr>
+                            <tbody id="applicationsTbody">
                             </tbody>
                         </table>
                     </div>
@@ -158,24 +97,8 @@
                 <div class="content-section" id="admin-fees">
                     <div class="card">
                         <h2>Fee Management Overview</h2>
-                        <div class="profile-info">
-                            <div class="info-item">
-                                <label>Total Outstanding Fees:</label>
-                                <span style="color: #dc3545; font-weight: bold;">MK 45,600</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Collected This Month:</label>
-                                <span style="color: #6b8e23; font-weight: bold;">MK 125,400</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Students with Overdue Fees:</label>
-                                <span style="color: #dc3545; font-weight: bold;">23 Students</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Payment Compliance:</label>
-                                <span style="color: #6b8e23; font-weight: bold;">87%</span>
-                            </div>
-                        </div>
+                        <p style="font-style: italic; color: #6b6b6b;">No fee summaries available.</p>
+                        <div id="paymentsList" style="margin-top:20px;"></div>
                     </div>
                 </div>
                 
@@ -183,27 +106,29 @@
                 <div class="content-section" id="admin-reports">
                     <div class="card">
                         <h2>Reports & Analytics</h2>
-                        <div class="profile-info">
-                            <div class="info-item">
-                                <label>Total Enrolled Students:</label>
-                                <span>456 Students</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Pending Applications:</label>
-                                <span>12 Applications</span>
-                            </div>
-                            <div class="info-item">
-                                <label>This Month's Revenue:</label>
-                                <span style="color: #6b8e23; font-weight: bold;">MK 125,400</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Average Fee Collection Time:</label>
-                                <span>8.5 days</span>
-                            </div>
-                        </div>
+                        <div id="reportsStats" class="profile-info"></div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Application Details Modal -->
+    <div id="applicationModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: #fff; max-width: 700px; width: 95%; border-radius: 10px; padding: 20px; position: relative;">
+            <button onclick="closeApplicationModal()" style="position:absolute; top:10px; right:10px; background:#eee; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Close</button>
+            <h3 style="margin-top:0; color:#1e5631;">Application Details</h3>
+            <div id="applicationModalContent"></div>
+            <div id="applicationModalActions" style="margin-top: 15px; display:flex; gap:10px;"></div>
+        </div>
+    </div>
+
+    <!-- Generic Modal -->
+    <div id="appModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index: 1000;">
+        <div style="background:#fff; max-width:480px; width: 92%; border-radius:10px; padding: 18px; position:relative;">
+            <h3 id="appModalTitle" style="margin:0 0 8px 0; color:#1e5631;">Modal</h3>
+            <div id="appModalBody" style="margin-bottom:12px;"></div>
+            <div id="appModalActions" style="display:flex; gap:10px; justify-content:flex-end;"></div>
         </div>
     </div>
 

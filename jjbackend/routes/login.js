@@ -1,34 +1,80 @@
-//create a route for the login that will fetch data from mongodb, that will fetch info
-//
+const express = require('express');
+const router = express.Router();
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
 
-// ======================================
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
+// JWT Secret (in production, use environment variable)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-    // Check if both username and password are provided
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Username and password are required.' });
-    }
+// Validation middleware
+const validateLogin = [
+    body('username').notEmpty().withMessage('Username is required'),
+    body('password').isLength({ min: 1 }).withMessage('Password is required')
+];
 
+const validateRegister = [
+    body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('fullName').notEmpty().withMessage('Full name is required')
+];
+
+// POST route for login
+router.post('/login', validateLogin, async (req, res) => {
     try {
-        // Find the user by username
-        const user = await User.findOne({ username });
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ 
+                message: 'Validation failed', 
+                errors: errors.array() 
+            });
+        }
 
-        // If user is not found, return an error
+        const { username, password } = req.body;
+
+        // Find the user by username
+        const user = await User.findOne({ username, isActive: true });
+
         if (!user) {
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 
-        // Compare the provided password with the hashed password in the database
-        const isMatch = await bcrypt.compare(password, user.password);
+        // Compare the provided password with the hashed password
+        const isMatch = await user.comparePassword(password);
 
-        if (isMatch) {
-            // Passwords match, login successful
-            res.status(200).json({ message: 'Login successful!', user: { id: user._id, username: user.username } });
-        } else {
-            // Passwords do not match
-            res.status(401).json({ message: 'Invalid username or password.' });
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid username or password.' });
         }
+
+        // Update last login
+        user.lastLogin = new Date();
+        await user.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { 
+                userId: user._id, 
+                username: user.username, 
+                role: user.role 
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(200).json({ 
+            message: 'Login successful!', 
+            token,
+            user: { 
+                id: user._id, 
+                username: user.username, 
+                role: user.role,
+                fullName: user.fullName,
+                email: user.email,
+                requiresPasswordReset: !!user.requiresPasswordReset
+            } 
+        });
 
     } catch (error) {
         console.error('Login error:', error);
@@ -36,33 +82,121 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ======================================
-// EXAMPLE REGISTRATION ROUTE (Optional but helpful)
-// ======================================
-app.post('/api/register', async (req, res) => {
-    const { username, password } = req.body;
-    
+// POST route for registration
+router.post('/register', validateRegister, async (req, res) => {
     try {
-        // Hash the password before saving it to the database
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ 
+                message: 'Validation failed', 
+                errors: errors.array() 
+            });
+        }
+
+        const { username, password, email, fullName, role = 'student' } = req.body;
         
+        // Check if user already exists
+        const existingUser = await User.findOne({ 
+            $or: [{ username }, { email }] 
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ 
+                message: 'Username or email already exists.' 
+            });
+        }
+
+        // Create new user
         const newUser = new User({
             username,
-            password: hashedPassword
+            password,
+            email,
+            fullName,
+            role,
+            requiresPasswordReset: role === 'student'
         });
 
         await newUser.save();
-        res.status(201).json({ message: 'User registered successfully!' });
+
+        res.status(201).json({ 
+            message: 'User registered successfully!',
+            user: {
+                id: newUser._id,
+                username: newUser.username,
+                email: newUser.email,
+                fullName: newUser.fullName,
+                role: newUser.role
+            }
+        });
 
     } catch (error) {
         console.error('Registration error:', error);
-        if (error.code === 11000) { // Mongoose error code for duplicate key
-            return res.status(400).json({ message: 'Username already exists.' });
-        }
         res.status(500).json({ message: 'Server error during registration.' });
     }
 });
 
-// Execute the connection function
-connectToDatabase();
+// POST route for logout (optional - mainly for client-side token removal)
+router.post('/logout', (req, res) => {
+    res.status(200).json({ message: 'Logout successful!' });
+});
+
+// Change password (first-time login flow)
+router.post('/change-password', async (req, res) => {
+    try {
+        const { userId, oldPassword, newPassword } = req.body;
+        if (!userId || !newPassword) {
+            return res.status(400).json({ message: 'Missing fields' });
+        }
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (user.requiresPasswordReset) {
+            // allow without checking oldPassword
+        } else {
+            const match = await user.comparePassword(oldPassword || '');
+            if (!match) return res.status(401).json({ message: 'Old password incorrect' });
+        }
+        user.password = newPassword;
+        user.requiresPasswordReset = false;
+        await user.save();
+        res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ message: 'Server error during password change.' });
+    }
+});
+
+// GET route to verify token
+router.get('/verify', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided.' });
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findById(decoded.userId).select('-password');
+        
+        if (!user || !user.isActive) {
+            return res.status(401).json({ message: 'Invalid token.' });
+        }
+
+        res.status(200).json({ 
+            message: 'Token valid',
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role,
+                fullName: user.fullName,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+        console.error('Token verification error:', error);
+        res.status(401).json({ message: 'Invalid token.' });
+    }
+});
+
+module.exports = router;

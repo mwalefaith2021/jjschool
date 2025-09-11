@@ -2,22 +2,54 @@
 
 // This function is now in the global scope to be accessible from the login page.
 function loginStudentUser(username, password) {
-    // Retrieve student data from localStorage
-    const studentData = JSON.parse(localStorage.getItem('studentData')) || {};
-    const student = studentData[username];
+    // Show loading state
+    const submitBtn = document.querySelector('.auth-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Logging in...';
 
-    // Check if the student exists and the password is correct
-    if (student && student.password === password) {
-        // Save login info to localStorage
-        localStorage.setItem("userType", "student");
-        localStorage.setItem("username", username);
-        localStorage.setItem("userProfile", JSON.stringify(student.profile));
+    // Send login request to backend API
+    fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.message === 'Login successful!' && data.user.role === 'student') {
+            // Store user data in localStorage
+            localStorage.setItem('userType', 'student');
+            localStorage.setItem('username', data.user.username);
+            localStorage.setItem('userProfile', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
 
-        // Redirect to dashboard
-        window.location.href = "studentdashboard.html";
-    } else {
-        alert("Invalid student credentials");
-    }
+            // If first login, force password change
+            if (data.user.requiresPasswordReset) {
+                showPasswordResetModal(data.user.id);
+                return;
+            }
+
+            // Redirect to student dashboard
+            window.location.href = 'studentdashboard.html';
+        } else {
+            alert('Invalid student credentials');
+        }
+    })
+    .catch(error => {
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    });
 }
 
 // All other functions are related to the student dashboard and should be called from there.
@@ -26,12 +58,14 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log('Student Dashboard scripts initialized');
     
     // Check authentication on dashboard page load
-    if (document.body.classList.contains('student-dashboard-page')) {
+    if (window.location.pathname.includes('studentdashboard.html')) {
       if (!checkAuth()) {
           return;
       }
       initializeStudentDashboard();
       loadUserProfile();
+      renderBackendStudentProfile();
+      fetchAndRenderStudentProfile();
       
       const paymentForm = document.getElementById("paymentForm");
       if (paymentForm) {
@@ -45,6 +79,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Authentication check
 function checkAuth() {
+    // Only check auth on dashboard pages, not on login page
+    if (window.location.pathname.includes('login.html')) {
+        return true;
+    }
+    
     const userType = localStorage.getItem('userType');
     const username = localStorage.getItem('username');
     
@@ -139,6 +178,58 @@ function loadUserProfile() {
     }
 }
 
+// Render logged-in user's info (from backend auth data)
+function renderBackendStudentProfile() {
+    const profile = JSON.parse(localStorage.getItem('userProfile'));
+    if (!profile) return;
+    const mappings = [
+        ['studentId', profile.studentId || '-'],
+        ['studentName', profile.fullName || profile.name || '-'],
+        ['studentClass', profile.class || '-'],
+        ['studentDob', profile.dob || '-'],
+        ['parentName', profile.parent || '-'],
+        ['contactNumber', profile.contact || '-'],
+        ['studentEmail', profile.email || '-'],
+        ['studentAddress', profile.address || '-']
+    ];
+    mappings.forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    });
+}
+
+// Fetch profile details from backend application record and render
+async function fetchAndRenderStudentProfile() {
+    try {
+        const profile = JSON.parse(localStorage.getItem('userProfile'));
+        if (!profile || !profile.id) return;
+        const res = await fetch(`http://localhost:3000/api/students/${profile.id}/application`);
+        if (!res.ok) return; // fallback already rendered
+        const { data } = await res.json();
+        if (!data) return;
+        const fullName = `${data.personalInfo.firstName} ${data.personalInfo.lastName}`;
+        const dob = data.personalInfo.dateOfBirth ? new Date(data.personalInfo.dateOfBirth).toLocaleDateString() : '-';
+        const klass = data.academicInfo?.applyingFor || '-';
+        const classDisplay = klass && klass.startsWith('form') ? `Form ${klass.replace('form','')}` : (klass || '-');
+        const mappings = [
+            ['studentId', data.applicationNumber || '-'],
+            ['studentName', fullName || '-'],
+            ['studentClass', classDisplay],
+            ['studentDob', dob],
+            ['parentName', data.parentInfo?.guardianName || '-'],
+            ['contactNumber', data.contactInfo?.phone || '-'],
+            ['studentEmail', data.contactInfo?.email || '-'],
+            ['studentAddress', data.contactInfo?.address || '-']
+        ];
+        mappings.forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        });
+    } catch (e) {
+        // Silent fallback
+    }
+}
+
 // Update student profile display
 function updateStudentProfile(profile) {
     const elements = {
@@ -227,6 +318,22 @@ function processPayment() {
     
     // Show payment confirmation
     showPaymentConfirmation(amount, type, method, paymentRef, studentId);
+
+    // Send to backend for admin visibility
+    const profile = JSON.parse(localStorage.getItem('userProfile'));
+    if (profile && profile.id) {
+        fetch('http://localhost:3000/api/payments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                studentId: profile.id,
+                amount: Number(amount),
+                type,
+                method,
+                reference: paymentRef
+            })
+        }).catch(() => {});
+    }
 }
 
 // Show payment confirmation with instructions
@@ -246,7 +353,7 @@ ${paymentInstructions}
 IMPORTANT: Keep this reference number safe for your records.
 Payment processing may take 24-48 hours to reflect in your account.`;
 
-    alert(confirmationMessage);
+    showInAppAlert('Payment Confirmation', confirmationMessage);
     
     // Clear the form after successful submission
     clearPaymentForm();
@@ -351,7 +458,7 @@ function getPaymentHistory() {
         JSON.parse(localStorage.getItem('userProfile')).studentId : null;
     
     if (!studentId) return [];
-    
+    // Future: fetch from backend if needed
     const allPayments = JSON.parse(localStorage.getItem('paymentHistory')) || [];
     return allPayments.filter(payment => payment.studentId === studentId);
 }
@@ -396,7 +503,7 @@ function showPaymentHistory() {
     const history = getPaymentHistory();
     
     if (history.length === 0) {
-        alert('No payment history found.');
+        showInAppAlert('Payment History', 'No payment history found.');
         return;
     }
     
@@ -411,18 +518,18 @@ function showPaymentHistory() {
         historyText += `    Status: ${payment.status.toUpperCase()}\n\n`;
     });
     
-    alert(historyText);
+    showInAppAlert('Payment History', `<pre style="white-space:pre-wrap;">${historyText}</pre>`);
 }
 
 // Logout function
 function logout() {
-    if (confirm('Are you sure you want to logout?')) {
+    showStudentConfirm('Logout', 'Are you sure you want to logout?').then(ok => {
+        if (!ok) return;
         localStorage.removeItem('userType');
         localStorage.removeItem('username');
         localStorage.removeItem('userProfile');
-        alert('Logged out successfully!');
         window.location.href = 'login.html';
-    }
+    });
 }
 
 // Auto-logout functionality (security feature)
@@ -431,11 +538,9 @@ let inactivityTimer;
 function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
-        if (confirm('You have been inactive for 30 minutes. Do you want to stay logged in?')) {
-            resetInactivityTimer();
-        } else {
-            logout();
-        }
+        showStudentConfirm('Stay Logged In', 'You have been inactive for 30 minutes. Stay logged in?').then(ok => {
+            if (ok) resetInactivityTimer(); else logout();
+        });
     }, 30 * 60 * 1000); // 30 minutes
 }
 
@@ -446,3 +551,81 @@ document.addEventListener('mousemove', resetInactivityTimer);
 
 // Start inactivity timer
 resetInactivityTimer();
+
+// -------- In-app modals for student --------
+function ensureStudentModal() {
+    if (document.getElementById('studentModal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'studentModal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;';
+    modal.innerHTML = `
+      <div style="background:#fff; max-width:480px; width:92%; border-radius:10px; padding:18px; position:relative;">
+        <h3 id="studentModalTitle" style="margin:0 0 8px 0; color:#1e5631;">Modal</h3>
+        <div id="studentModalBody" style="margin-bottom:12px;"></div>
+        <div id="studentModalActions" style="display:flex; gap:10px; justify-content:flex-end;"></div>
+      </div>`;
+    document.body.appendChild(modal);
+}
+
+function showInAppAlert(title, body) {
+    ensureStudentModal();
+    const modal = document.getElementById('studentModal');
+    document.getElementById('studentModalTitle').textContent = title;
+    document.getElementById('studentModalBody').innerHTML = body.replace(/\n/g, '<br>');
+    const actions = document.getElementById('studentModalActions');
+    actions.innerHTML = '';
+    const ok = document.createElement('button'); ok.textContent = 'OK'; ok.className = 'approve-btn';
+    ok.onclick = () => { modal.style.display = 'none'; };
+    actions.appendChild(ok);
+    modal.style.display = 'flex';
+}
+
+function showStudentConfirm(title, message) {
+    ensureStudentModal();
+    return new Promise(resolve => {
+        const modal = document.getElementById('studentModal');
+        document.getElementById('studentModalTitle').textContent = title;
+        document.getElementById('studentModalBody').innerHTML = `<p>${message}</p>`;
+        const actions = document.getElementById('studentModalActions');
+        actions.innerHTML = '';
+        const cancel = document.createElement('button'); cancel.textContent = 'Cancel'; cancel.className = 'reject-btn';
+        cancel.onclick = () => { modal.style.display = 'none'; resolve(false); };
+        const ok = document.createElement('button'); ok.textContent = 'OK'; ok.className = 'approve-btn';
+        ok.onclick = () => { modal.style.display = 'none'; resolve(true); };
+        actions.appendChild(cancel); actions.appendChild(ok);
+        modal.style.display = 'flex';
+    });
+}
+
+function showPasswordResetModal(userId) {
+    ensureStudentModal();
+    const modal = document.getElementById('studentModal');
+    document.getElementById('studentModalTitle').textContent = 'Set New Password';
+    document.getElementById('studentModalBody').innerHTML = `
+      <label style="display:block; margin-bottom:6px;">Enter a new password (min 6 chars)</label>
+      <input id="studentNewPassword" type="password" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;" />`;
+    const actions = document.getElementById('studentModalActions');
+    actions.innerHTML = '';
+    const submit = document.createElement('button'); submit.textContent = 'Submit'; submit.className = 'approve-btn';
+    submit.onclick = () => {
+        const newPass = document.getElementById('studentNewPassword').value;
+        if (!newPass || newPass.length < 6) {
+            showInAppAlert('Error', 'Password must be at least 6 characters.');
+            return;
+        }
+        fetch('http://localhost:3000/api/change-password', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId, newPassword: newPass })
+        })
+        .then(r => { if (!r.ok) throw new Error('Failed to set new password'); return r.json(); })
+        .then(() => {
+            modal.style.display = 'none';
+            showInAppAlert('Success', 'Password updated. Please login again with your new password.');
+        })
+        .catch(err => showInAppAlert('Error', err.message));
+    };
+    const cancel = document.createElement('button'); cancel.textContent = 'Cancel'; cancel.className = 'reject-btn';
+    cancel.onclick = () => { modal.style.display = 'none'; };
+    actions.appendChild(cancel); actions.appendChild(submit);
+    modal.style.display = 'flex';
+}
