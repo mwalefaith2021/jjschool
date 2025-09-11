@@ -9,7 +9,7 @@ function loginStudentUser(username, password) {
     submitBtn.textContent = 'Logging in...';
 
     // Send login request to backend API
-    fetch('http://localhost:3000/api/login', {
+    fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -203,7 +203,7 @@ async function fetchAndRenderStudentProfile() {
     try {
         const profile = JSON.parse(localStorage.getItem('userProfile'));
         if (!profile || !profile.id) return;
-        const res = await fetch(`http://localhost:3000/api/students/${profile.id}/application`);
+        const res = await fetch(`${API_BASE}/api/students/${profile.id}/application`);
         if (!res.ok) return; // fallback already rendered
         const { data } = await res.json();
         if (!data) return;
@@ -322,7 +322,7 @@ function processPayment() {
     // Send to backend for admin visibility
     const profile = JSON.parse(localStorage.getItem('userProfile'));
     if (profile && profile.id) {
-        fetch('http://localhost:3000/api/payments', {
+        fetch(`${API_BASE}/api/payments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -613,7 +613,7 @@ function showPasswordResetModal(userId) {
             showInAppAlert('Error', 'Password must be at least 6 characters.');
             return;
         }
-        fetch('http://localhost:3000/api/change-password', {
+        fetch(`${API_BASE}/api/change-password`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: userId, newPassword: newPass })
         })

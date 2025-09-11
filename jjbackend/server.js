@@ -18,8 +18,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+// Configure CORS to allow Netlify frontend and local dev.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8000,http://127.0.0.1:8000,https://jjsecondaryschool.netlify.app')
+    .split(',')
+    .map(o => o.trim());
+
 app.use(cors({
-    origin: ['http://localhost:8000', 'http://127.0.0.1:8000'],
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(express.json());

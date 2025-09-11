@@ -102,7 +102,7 @@ function handleAdmissionFormSubmit(event) {
     statusDiv.style.color = '#007bff';
     
     // Send data to backend API
-    fetch('http://localhost:3000/api/submit-application', {
+    fetch(`${API_BASE}/api/submit-application`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
