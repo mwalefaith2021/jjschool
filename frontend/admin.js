@@ -29,7 +29,11 @@ function loginAdminUser(username, password) {
             localStorage.setItem('username', data.user.username);
             localStorage.setItem('userProfile', JSON.stringify(data.user));
             localStorage.setItem('token', data.token);
-            
+            // Require password reset if flagged
+            if (data.user.requiresPasswordReset) {
+                showAdminPasswordResetModal(data.user.id);
+                return;
+            }
             // Redirect to admin dashboard
             window.location.href = 'admindashboard.html';
         } else {
@@ -48,7 +52,7 @@ function loginAdminUser(username, password) {
 
 
 // Check authentication on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('Admin Dashboard initialized');
     
     // Only check auth on dashboard pages, not on login page
@@ -56,10 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Check if user is authenticated as admin
-    if (!checkAuth()) {
-        return;
-    }
+    // Check if user is authenticated as admin and token is valid
+    const authed = await checkAuth();
+    if (!authed) return;
     
     // Initialize dashboard
     initializeAdminDashboard();
@@ -76,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Authentication check
-function checkAuth() {
+async function checkAuth() {
     // Only check auth on dashboard pages, not on login page
     if (window.location.pathname.includes('login.html')) {
         return true;
@@ -84,12 +87,28 @@ function checkAuth() {
     
     const userType = localStorage.getItem('userType');
     const username = localStorage.getItem('username');
+    const token = localStorage.getItem('token');
     
     if (!userType || !username || userType !== 'admin') {
         window.location.href = 'login.html';
         return false;
     }
-    return true;
+    // verify token with backend
+    try {
+        const res = await fetch(`${API_BASE}/api/verify`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Invalid');
+        return true;
+    } catch {
+        // clear and redirect
+        localStorage.removeItem('userType');
+        localStorage.removeItem('username');
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+        return false;
+    }
 }
 
 // Initialize admin dashboard
@@ -412,6 +431,7 @@ function logout() {
         localStorage.removeItem('userType');
         localStorage.removeItem('username');
         localStorage.removeItem('userProfile');
+        localStorage.removeItem('token');
         window.location.href = 'login.html';
     });
 }
@@ -527,6 +547,76 @@ function showInfo(title, messageHtml) {
             ]
         });
     });
+}
+
+function showAdminPasswordResetModal(userId) {
+    const appModal = document.getElementById('appModal');
+    const bodyHTML = `
+      <label style="display:block; margin-bottom:6px;">Set a new password (min 6 chars)</label>
+      <input id="adminNewPassword" type="password" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;" />`;
+    const submitHandler = async () => {
+        const newPass = document.getElementById('adminNewPassword').value;
+        if (!newPass || newPass.length < 6) {
+            if (appModal) { showInfo('Error', 'Password must be at least 6 characters.'); }
+            else { alert('Password must be at least 6 characters.'); }
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE}/api/change-password`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, newPassword: newPass })
+            });
+            if (!res.ok) throw new Error('Failed to update password');
+            if (appModal) { showInfo('Success', 'Password updated. Please login again.'); }
+            else { alert('Password updated. Please login again.'); }
+            localStorage.removeItem('userType');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userProfile');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        } catch (e) {
+            if (appModal) { showInfo('Error', e.message); }
+            else { alert('Error: ' + e.message); }
+        }
+    };
+    if (appModal) {
+        showModal({
+            title: 'Admin: Change Password',
+            bodyHTML,
+            actions: [
+                { text: 'Cancel', className: 'reject-btn' },
+                { text: 'Submit', className: 'approve-btn', onClick: submitHandler }
+            ]
+        });
+        return;
+    }
+    // Fallback minimal modal for login page
+    ensureAuthModal();
+    const modal = document.getElementById('authModal');
+    document.getElementById('authModalTitle').textContent = 'Admin: Change Password';
+    document.getElementById('authModalBody').innerHTML = bodyHTML;
+    const actions = document.getElementById('authModalActions');
+    actions.innerHTML = '';
+    const cancel = document.createElement('button'); cancel.textContent = 'Cancel'; cancel.className = 'reject-btn';
+    cancel.onclick = () => { modal.style.display = 'none'; };
+    const submit = document.createElement('button'); submit.textContent = 'Submit'; submit.className = 'approve-btn';
+    submit.onclick = () => { submitHandler(); modal.style.display = 'none'; };
+    actions.appendChild(cancel); actions.appendChild(submit);
+    modal.style.display = 'flex';
+}
+
+function ensureAuthModal() {
+    if (document.getElementById('authModal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'authModal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;';
+    modal.innerHTML = `
+      <div style="background:#fff; max-width:480px; width:92%; border-radius:10px; padding:18px; position:relative;">
+        <h3 id="authModalTitle" style="margin:0 0 8px 0; color:#1e5631;">Modal</h3>
+        <div id="authModalBody" style="margin-bottom:12px;"></div>
+        <div id="authModalActions" style="display:flex; gap:10px; justify-content:flex-end;"></div>
+      </div>`;
+    document.body.appendChild(modal);
 }
 
 // ------- Student Management -------

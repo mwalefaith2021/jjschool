@@ -53,15 +53,14 @@ function loginStudentUser(username, password) {
 }
 
 // All other functions are related to the student dashboard and should be called from there.
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     // This is for code that should only run once the DOM is fully loaded on the student dashboard page.
     console.log('Student Dashboard scripts initialized');
     
     // Check authentication on dashboard page load
     if (window.location.pathname.includes('studentdashboard.html')) {
-      if (!checkAuth()) {
-          return;
-      }
+      const ok = await checkAuth();
+      if (!ok) return;
       initializeStudentDashboard();
       loadUserProfile();
       renderBackendStudentProfile();
@@ -78,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Authentication check
-function checkAuth() {
+async function checkAuth() {
     // Only check auth on dashboard pages, not on login page
     if (window.location.pathname.includes('login.html')) {
         return true;
@@ -86,13 +85,26 @@ function checkAuth() {
     
     const userType = localStorage.getItem('userType');
     const username = localStorage.getItem('username');
+    const token = localStorage.getItem('token');
     
     if (!userType || !username || userType !== 'student') {
         alert('Access denied. Please login as student.');
         window.location.href = 'login.html';
         return false;
     }
-    return true;
+    // Verify token with backend
+    try {
+        const res = await fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) throw new Error('Invalid');
+        return true;
+    } catch {
+        localStorage.removeItem('userType');
+        localStorage.removeItem('username');
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+        return false;
+    }
 }
 
 // Initialize student dashboard
@@ -528,6 +540,7 @@ function logout() {
         localStorage.removeItem('userType');
         localStorage.removeItem('username');
         localStorage.removeItem('userProfile');
+        localStorage.removeItem('token');
         window.location.href = 'login.html';
     });
 }

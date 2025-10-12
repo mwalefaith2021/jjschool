@@ -106,6 +106,29 @@ connectToDatabase().then(async () => {
     } catch (e) {
         console.warn('Could not remove sample student:', e.message);
     }
+
+    // Ensure there is at least one admin user
+    try {
+        const admins = await User.countDocuments({ role: 'admin' });
+        if (admins === 0) {
+            const defaultAdmin = new User({
+                username: process.env.ADMIN_USERNAME || 'admin',
+                password: process.env.ADMIN_PASSWORD || 'Admin@123',
+                email: process.env.ADMIN_EMAIL || 'admin@example.com',
+                fullName: process.env.ADMIN_FULLNAME || 'System Administrator',
+                role: 'admin',
+                requiresPasswordReset: true
+            });
+            await defaultAdmin.save();
+            console.log('👑 Default admin user created');
+            console.log('   Username:', defaultAdmin.username);
+            console.log('   Temp Password:', process.env.ADMIN_PASSWORD ? '[from ENV]' : 'Admin@123');
+            console.log('   Email:', defaultAdmin.email);
+            console.log('   Note: requiresPasswordReset=true. Admin will be prompted to set a new password on first login.');
+        }
+    } catch (e) {
+        console.warn('Could not ensure default admin exists:', e.message);
+    }
     app.listen(PORT, () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);
         console.log(`📊 Health check: http://localhost:${PORT}/health`);
