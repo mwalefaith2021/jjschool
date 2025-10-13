@@ -30,7 +30,7 @@
                 
                 
                 <div class="form-group">
-                    <label for="userType">Login As mm:</label>
+                    <label for="userType">Login As:</label>
                     <select id="userType" required>
                         <option value="">Select User Type</option>
                         <option value="student">Student/Parent</option>
@@ -60,6 +60,7 @@
     <script src="config.js"></script>
     <script src="admin.js"></script>
     <script src="student.js"></script>
+    <script src="auth.js"></script>
     <script>
         // Login form handling
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -79,14 +80,9 @@
                 return;
             }
             
-            // Call the correct login function based on user type
-            if (userType === 'admin') {
-                loginAdminUser(username, password);
-            } else if (userType === 'student') {
-                loginStudentUser(username, password);
-            } else {
-                alert('Invalid user type selected.');
-            }
+            // Use unified auth handler (still uses existing modals for resets)
+            Auth.login(userType, username, password)
+              .catch(err => alert(err.message || 'Login failed. Please try again.'));
         });
     </script>
 </body>

@@ -19,13 +19,31 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 // Configure CORS to allow Netlify frontend and local dev.
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8000,http://127.0.0.1:8000,https://jjsecondaryschool.netlify.app')
+const allowedOriginsList = (process.env.ALLOWED_ORIGINS || 'http://localhost:8000,http://127.0.0.1:8000,https://jjsecondaryschool.netlify.app')
     .split(',')
-    .map(o => o.trim());
+    .map(o => o.trim())
+    .filter(Boolean);
 
 app.use(cors({
-    origin: allowedOrigins,
-    credentials: true
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl) or same-origin
+        if (!origin) return callback(null, true);
+        // Allow exact matches from list
+        if (allowedOriginsList.includes(origin)) return callback(null, true);
+        // Allow any Netlify app domain
+        if (/^https?:\/\/[a-z0-9-]+\.netlify\.app$/i.test(origin)) return callback(null, true);
+        // Allow custom domain via wildcard env VAR ALLOW_REGEX (optional)
+        try {
+            if (process.env.ALLOW_ORIGIN_REGEX) {
+                const re = new RegExp(process.env.ALLOW_ORIGIN_REGEX, 'i');
+                if (re.test(origin)) return callback(null, true);
+            }
+        } catch {}
+        callback(new Error(`CORS: Origin ${origin} not allowed`));
+    },
+    credentials: true,
+    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
