@@ -29,7 +29,7 @@ async function sendEmail(to, subject, html) {
 
 // Validation middleware for admission form
 const validateAdmission = [
-    body('firstName').notEmpty().withMessage('First name is required'),
+    body('firstName').notEmpty().withMessage('First name is required.'),
     body('lastName').notEmpty().withMessage('Last name is required'),
     body('dateOfBirth').isISO8601().withMessage('Valid date of birth is required'),
     body('gender').isIn(['male', 'female']).withMessage('Valid gender is required'),
