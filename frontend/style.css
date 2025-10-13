@@ -10,6 +10,9 @@ body {
     color: #333;
 }
 
+/* iOS Safari: prevent auto text zoom */
+html { -webkit-text-size-adjust: 100%; }
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -610,13 +613,8 @@ footer {
 }
 
 @media (max-width: 480px) {
-    .slide-content h2 {
-        font-size: 1.8rem;
-    }
-    
-    .slide-content h3 {
-        font-size: 1.3rem;
-    }
+    .slide-content h2 { font-size: 1.6rem; }
+    .slide-content h3 { font-size: 1.2rem; }
     
     .btn {
         padding: 10px 20px;
