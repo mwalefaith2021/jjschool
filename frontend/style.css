@@ -2,6 +2,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Apply smooth transitions globally, but ensure it's performant */
+    transition: all 0.3s ease; 
 }
 
 body {
@@ -111,6 +113,52 @@ nav {
     gap: 1rem;
 }
 
+/* --- CSS for Featured Gallery Section --- */
+
+.featured-gallery {
+    padding: 60px 0;
+    background-color: #f4f7f9; /* Light background to separate sections */
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.gallery-item {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 200px; /* Uniform height for images */
+    object-fit: cover;
+    display: block;
+}
+
+.gallery-item .caption {
+    padding: 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+}
+
+.gallery-cta {
+    text-align: center;
+    margin-top: 40px;
+}
 
 /* Container for the buttons */
 .header-buttons {
@@ -170,6 +218,7 @@ nav {
     height: 100%;
     opacity: 0;
     transition: opacity 1s ease-in-out;
+    will-change: opacity; /* Added for performance */
 }
 
 .slide.active {
@@ -185,6 +234,7 @@ nav {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    will-change: transform; /* Added for performance */
 }
 
 .slide-background::before {
@@ -346,60 +396,96 @@ nav {
     font-size: 1.5rem;
 }
 
-/* Programs Section */
+/* ---------------------------------------------------- */
+/* --- Programs Section (FIXED TO MATCH ACADEMIC IMAGE) --- */
+/* ---------------------------------------------------- */
 .programs {
     padding: 80px 0;
-    background: white;
+    background: #f4f7f9; /* Light, neutral background */
 }
 
 .programs-grid {
+    /* Enforce 3 columns for large screens, ensuring responsive wrap */
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
+    gap: 30px; /* Ample space between cards */
     margin-top: 60px;
 }
 
 .program-card {
-    background: #f8fdf8;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
+    /* Base Card Styling for uniformity and spacing */
+    background-color: #f7fff7; /* Light cream/green tint background */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    /* CRITICAL FIX: Ensures all cards stretch to the height of the tallest card in the row */
+    height: 100%; 
+    text-align: center; /* Center content to match the image style */
 }
 
 .program-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* Re-introducing the large centered icon style */
 .program-icon {
     width: 80px;
     height: 80px;
+    background: #1e5631; /* Primary green color */
     border-radius: 50%;
-    margin: 30px auto 20px;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0 auto 25px; /* Centered margin and larger space */
     color: white;
-    font-size: 2rem;
+    font-size: 2.2rem;
+    /* Optional: Add a subtle inner shadow or border for depth */
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.5); 
 }
 
-.program-card:nth-child(1) .program-icon { background: #1e5631; }
-.program-card:nth-child(2) .program-icon { background: #2d7a4a; }
-.program-card:nth-child(3) .program-icon { background: #1e5631; }
-.program-card:nth-child(4) .program-icon { background: #2d7a4a; }
-.program-card:nth-child(5) .program-icon { background: #1e5631; }
-.program-card:nth-child(6) .program-icon { background: #2d7a4a; }
 
-.program-content {
-    padding: 0 30px 30px;
-    text-align: center;
+.program-card h3 {
+    font-size: 1.4em;
+    color: #1e5631; /* Primary Green color */
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 700;
+    padding-bottom: 0;
+    border-bottom: none; 
 }
 
-.program-content h3 {
-    color: #1e5631;
-    margin-bottom: 15px;
-    font-size: 1.3rem;
+.program-card p {
+    font-size: 1em;
+    color: #666;
+    margin-bottom: 20px;
+    /* CRITICAL FIX: This pushes the program-details to the bottom for uniform alignment */
+    flex-grow: 1; 
 }
+
+.program-details {
+    font-size: 0.9em;
+    line-height: 1.6; /* Slightly tighter line-height for details */
+    color: #333;
+    padding-top: 10px;
+    /* Match the simple style of the image, minimizing heavy lines */
+    border-top: none; 
+    margin-top: auto; 
+    text-align: center; 
+}
+
+/* Since the image shows all cards having the same background, we remove the alternating background colors */
+.programs-grid .program-card:nth-child(2) { background-color: #f7fff7; } 
+.programs-grid .program-card:nth-child(3) { background-color: #f7fff7; } 
+.programs-grid .program-card:nth-child(4) { background-color: #f7fff7; }
+.programs-grid .program-card:nth-child(5) { background-color: #f7fff7; }
+.programs-grid .program-card:nth-child(6) { background-color: #f7fff7; }
+
+/* --- End Programs Section (FIXED) --- */
+
 
 /* Student Portal Section */
 .student-portal {
@@ -671,7 +757,7 @@ body.loaded {
 @media (max-width: 480px) {
     h1 { font-size: 1.5rem; }
     h2 { font-size: 1.2rem; }
-    p  { font-size: 0.9rem; }
+    p  { font-size: 0.9rem; }
     .hero .container {
         padding: 1rem;
     }

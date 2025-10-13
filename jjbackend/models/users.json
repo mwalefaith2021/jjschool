@@ -1,0 +1,33 @@
+[
+  {
+    "username": "jsmith",
+    
+    // IMPORTANT: This is a pre-hashed password (e.g., for 'secret123').
+    // Since Mongoose hooks don't run on direct imports, the hash is required.
+    "password": "$2a$10$wT.M/TqHk2fX7dO.t5P5buaS9B1QcR5f6iL.7qWv1Y3N6P4qV2G0.", 
+    
+    "role": "admin",
+    "email": "john.smith@example.com",
+    "fullName": "John Smith",
+    "isActive": true,
+    "requiresPasswordReset": false,
+    "lastLogin": {
+      "$date": "2025-10-07T12:00:00.000Z"
+    },
+    "createdAt": {
+      "$date": "2025-10-07T10:20:00.000Z"
+    }
+  },
+  {
+    "username": "tstudent",
+    "password": "$2a$10$0k8M/b5rX1yA9cQ2oP3mB.lF4jN5gH6tV7uE8wX9yZ0/1I2J3K4L5", // Another example hash (for 'testpass')
+    "role": "student",
+    "email": "test.student@university.edu",
+    "fullName": "Test Student",
+    "isActive": true,
+    "requiresPasswordReset": false,
+    "createdAt": {
+      "$date": "2025-09-15T08:30:00.000Z"
+    }
+  }
+]

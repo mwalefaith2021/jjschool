@@ -122,7 +122,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="phone">Phone Number</label>
-                                <input type="tel" id="phone" name="phone">
+                                <input type="tel" id="phone" name="phone" required>
                             </div>
                             <div class="form-group">
                                 <label for="email">Email Address</label>
@@ -148,14 +148,14 @@
                                 <label for="academicYear">Academic Year *</label>
                                 <select id="academicYear" name="academicYear" required>
                                     <option value="">Select Year</option>
-                                    <option value="2025">2025</option>
-                                    <option value="2026">2026</option>
+                                    <option value="2025">2026</option>
+                                    <!--<option value="2026">2027</option>-->
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="previousSchool">Previous School*</label>
-                            <input type="text" id="previousSchool" name="previousSchool" required>
+                            <label for="previousSchool">Previous School(if any)*</label>
+                            <input type="text" id="previousSchool" name="previousSchool" >
                         </div>
                          <div class="form-group">
                            <label for="documentUpload">Upload Required Documents*</label>
@@ -242,16 +242,30 @@
                             </ul>
                         </div>
                     </div>
+<div class="form-section">
+    <div class="terms-section">
+        <p style="margin-bottom: 15px; font-weight: 600; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+            <span style="font-size: 1.1em; color: #333;">Essential Documents:</span>
+        </p>
+        <div class="document-links" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+            <a href="pdf/Registration Form 2025_26.pdf" target="_blank" style="color: #007bff; text-decoration: none;">
+                <span style="margin-right: 5px;">📄</span> Application Form Guide (PDF)
+            </a>
+            <a href="pdf/J and J Core Values.pdf" target="_blank" style="color: #007bff; text-decoration: none;">
+                <span style="margin-right: 5px;">✨</span> J & J Secondary School Core Values (PDF)
+            </a>
+            <a href="pdfs/terms_and_conditions.pdf" target="_blank" style="color: #007bff; text-decoration: none;">
+                <span style="margin-right: 5px;">⚖️</span> Full Terms and Conditions (PDF)
+            </a>
+        </div>
 
-                    <div class="form-section">
-                        <div class="terms-section">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="terms" name="terms" required>
-                                <span class="checkmark"></span>
-                                I agree to the <a href="#" target="_blank">Terms and Conditions</a> and confirm that all information provided is accurate and complete. *
-                            </label>
-                        </div>
-                    </div>
+        <label class="checkbox-label">
+            <input type="checkbox" id="terms" name="terms" required>
+            <span class="checkmark"></span>
+            I have reviewed the essential documents and agree to the **Terms and Conditions**, confirming all information provided is accurate and complete. *
+        </label>
+    </div>
+</div>
 
                     <div class="form-submit">
                         <button type="submit" class="btn btn-primary submit-btn">Submit Application</button>
@@ -262,6 +276,7 @@
         </div>
     </section>
 
+    <!--
     <section class="next-steps">
         <div class="container">
             <div class="section-header">
@@ -291,7 +306,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section>-->
 
     <section class="contact-admissions">
         <div class="container">
@@ -345,7 +360,7 @@
                         </div>
                         <div class="date-item">
                             <strong>School Reopening:</strong>
-                            <span>February 5, 2025</span>
+                            <span>January 5, 2026</span>
                         </div>
                     </div>
                 </div>
@@ -380,11 +395,11 @@
                     <h3>Contact Info</h3>
                     <p>📍 M1, Chifundo, Mpemba, Blantyre, Malawi</p>
                     <p>📞 +265888342707 | +265998280218</p>
-                    <p>📧 admin@jandjschoolsmw.com</p>
+                    <p>📧 jandjschoolsmw@gmail.com | admin@jandjschoolsmw.com</p>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 J & J Secondary School. All rights reserved. | Designed with excellence in mind.</p>
+                <p>&copy; 2025 J & J Secondary School. All rights reserved. | The Arena of a.</p>
             </div>
         </div>
     </footer>
