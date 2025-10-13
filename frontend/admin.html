@@ -8,7 +8,7 @@
 </head>
 <body>
     <!-- Header -->
-    <headergit>
+    <header>
             <nav>
                 <div class="logo-section">
                     <div class="logo-placeholder">
@@ -27,8 +27,8 @@
                     <li><a href="index.html#programs">Programs</a></li>
                     <li><a href="admissions.html">Admissions</a></li>
                 </ul>
+                <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">☰</button>
             </nav>
-        </div>
     </header>
 
     <!-- Administration Hero -->
@@ -270,8 +270,19 @@
         </div>
     </footer>
 
-    <script src="config.js"></script>
-    <script src="script.js"></script>
+        <script src="config.js"></script>
+        <script>
+            // Mobile nav toggle for admin page
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggle = document.getElementById('menu-toggle');
+                const nav = document.querySelector('.nav-links');
+                if (toggle && nav) {
+                    toggle.addEventListener('click', function() {
+                        nav.classList.toggle('active');
+                    });
+                }
+            });
+        </script>
 </body>
 </html>
                     
