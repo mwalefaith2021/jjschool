@@ -62,6 +62,7 @@ nav {
     width: 80px;
     height: auto;
     display: block;
+    max-width: 100%;
 }
 
 .school-info h1 {
@@ -114,9 +115,10 @@ nav {
 
 /* Container for the buttons */
 .header-buttons {
-    display: flex; /* Use flexbox for horizontal alignment */
-    gap: 15px; /* Add space between the buttons */
-    align-items: center; /* Vertically align the buttons */
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .apply-btn {
@@ -152,6 +154,7 @@ nav {
 /* Hero Section with Slider */
 .hero {
     position: relative;
+    min-height: 70vh;
     height: 100vh;
     overflow: hidden;
 }
@@ -565,6 +568,13 @@ footer {
     .nav-links {
         display: none;
     }
+    .nav-links.active {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        margin-top: 1rem;
+    }
     
     .slide-content h2 {
         font-size: 2rem;
@@ -592,9 +602,7 @@ footer {
         gap: 10px;
     }
     
-    .hero {
-        height: 70vh;
-    }
+    .hero { height: auto; min-height: 60vh; }
     
     .slider-nav {
         bottom: 20px;
@@ -623,6 +631,15 @@ footer {
     .portal-grid {
         grid-template-columns: 1fr;
     }
+    .header-buttons { width: 100%; justify-content: center; }
+    .header-buttons .apply-btn, .header-buttons .login { flex: 1 1 auto; text-align: center; }
+}
+
+/* Tables: horizontal scroll on small screens */
+.students-table, .responsive-table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
 }
 
 /* Loading animation */

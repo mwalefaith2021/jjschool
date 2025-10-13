@@ -97,11 +97,10 @@ window.addEventListener('scroll', function() {
     }
 });
 
-// Mobile menu toggle (if you want to add mobile menu later)
+// Mobile menu toggle
 const mobileMenuToggle = document.getElementById('menu-toggle');
 const navLinks = document.querySelector('.nav-links');
-
-if (mobileMenuToggle) {
+if (mobileMenuToggle && navLinks) {
     mobileMenuToggle.addEventListener('click', function() {
         navLinks.classList.toggle('active');
     });
@@ -178,6 +177,3 @@ if (counterSection) {
     counterObserver.observe(counterSection);
 }
 
-menuToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-});
