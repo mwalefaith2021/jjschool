@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>J & J Secondary School - Admin Dashboard</title>
     <link rel="stylesheet" href="dash.css">
 </head>
@@ -45,7 +45,6 @@
                             <input id="studentSearch" placeholder="Search by name or email" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;" />
                             <button class="action-btn" onclick="loadStudents()">Refresh</button>
                         </div>
-                        <div class="students-table-wrapper">
                         <table class="students-table">
                             <thead>
                                 <tr>
@@ -57,7 +56,6 @@
                             </thead>
                             <tbody id="studentsTbody"></tbody>
                         </table>
-                        </div>
                     </div>
                 </div>
                 
@@ -65,7 +63,6 @@
                 <div class="content-section" id="admin-applications">
                     <div class="card">
                         <h2>Student Applications</h2>
-                        <div class="students-table-wrapper">
                         <table class="students-table" id="applicationsTable">
                             <thead>
                                 <tr>
@@ -80,7 +77,6 @@
                             <tbody id="applicationsTbody">
                             </tbody>
                         </table>
-                        </div>
                     </div>
                 </div>
 

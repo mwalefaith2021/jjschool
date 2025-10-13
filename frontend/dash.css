@@ -25,9 +25,6 @@
     --border-radius-btn: 10px;
 }
 
-/* Prevent iOS Safari from auto-zooming text */
-html { -webkit-text-size-adjust: 100%; }
-
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-dark) 0%);
@@ -270,7 +267,6 @@ body {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    max-width: 100%;
 }
 
 .header-text h1 {
@@ -426,12 +422,6 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-}
-
-/* Make tables scrollable on small screens */
-.students-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
 }
 
 .students-table th,
@@ -675,7 +665,9 @@ body {
         text-align: center;
     }
     
-    .school-logo h1 { font-size: 1.6em; }
+    .school-logo h1 {
+        font-size: 1.8em;
+    }
     
     .container {
         flex-direction: column;
@@ -691,8 +683,7 @@ body {
         width: 100%;
         display: flex;
         overflow-x: auto;
-        padding: 0 10px;
-        gap: 8px;
+        padding: 0;
         border-right: none;
         border-bottom: 1px solid var(--color-border);
     }
@@ -701,8 +692,7 @@ body {
         white-space: nowrap;
         min-width: 120px;
         text-align: center;
-        padding: 12px 14px;
-        flex: 0 0 auto;
+        padding: 15px 20px;
     }
     
     .main-content {
@@ -735,11 +725,21 @@ body {
         margin: 2px;
     }
     
-    .header { padding: 12px 14px; }
-    .header-logo { gap: 8px; }
-    .header-logo-image { width: 64px; height: 64px; }
-    .header-text h1 { font-size: 1.15em; }
-    .header-text p { font-size: 0.8em; }
+    .header {
+        padding: 15px 20px;
+    }
+    
+    .header-logo {
+        gap: 10px;
+    }
+    
+    .header-text h1 {
+        font-size: 1.3em;
+    }
+    
+    .header-text p {
+        font-size: 0.8em;
+    }
     
     .signup-item {
         flex-direction: column;
@@ -760,15 +760,6 @@ body {
     .detail-value {
         text-align: left;
     }
-}
-
-/* Extra small devices: reduce base font and spacing */
-@media (max-width: 420px) {
-    html { font-size: 15px; }
-    .nav-item { padding: 10px 12px; min-width: 100px; font-size: 0.95em; }
-    .main-content { padding: 16px; }
-    .card { padding: 18px; }
-    .students-table th, .students-table td { padding: 8px 6px; }
 }
 
 /* Tablet and Desktop adjustments (minor) */
