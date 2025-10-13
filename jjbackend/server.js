@@ -62,8 +62,13 @@ const mongoURL = process.env.MONGODB_URL || 'mongodb+srv://mwalefaith:Faith20020
 
 async function connectToDatabase() {
     try {
-        await mongoose.connect(mongoURL);
+        const dbName = process.env.MONGODB_DB || 'JJSEC';
+        await mongoose.connect(mongoURL, { dbName });
+        const conn = mongoose.connection;
         console.log('✅ Successfully connected to MongoDB!');
+        console.log('   Host:', conn.host);
+        console.log('   DB name:', conn.name);
+        console.log('   Ready state:', conn.readyState);
     } catch (err) {
         console.error('❌ Error connecting to MongoDB:', err);
         process.exit(1);
@@ -75,8 +80,63 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'J & J Secondary School API is running',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        db: { name: mongoose.connection?.name, readyState: mongoose.connection?.readyState }
     });
+});
+
+// Admin seed status (optional diagnostic). If ADMIN_STATUS_TOKEN is set,
+// require token query param to match.
+app.get('/admin-seed-status', async (req, res) => {
+    try {
+        if (process.env.ADMIN_STATUS_TOKEN) {
+            if (req.query.token !== process.env.ADMIN_STATUS_TOKEN) {
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+        }
+        const count = await User.countDocuments({ role: 'admin' });
+        const one = await User.findOne({ role: 'admin' }).select('username email isActive requiresPasswordReset createdAt');
+        return res.status(200).json({
+            db: mongoose.connection?.name,
+            admins: { count, sample: one }
+        });
+    } catch (e) {
+        console.error('Admin seed status error:', e);
+        res.status(500).json({ message: 'Error checking admin status' });
+    }
+});
+
+// Force-create an admin (guarded by ADMIN_SEED_TOKEN). Use sparingly.
+app.post('/admin-seed', async (req, res) => {
+    try {
+        const provided = req.query.token || req.headers['x-seed-token'];
+        if (process.env.ADMIN_SEED_TOKEN) {
+            if (!provided || provided !== process.env.ADMIN_SEED_TOKEN) {
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+        } else {
+            return res.status(403).json({ message: 'Server not configured for seeding (missing ADMIN_SEED_TOKEN)' });
+        }
+        const count = await User.countDocuments({ role: 'admin' });
+        if (count > 0) {
+            const existing = await User.findOne({ role: 'admin' }).select('username email createdAt');
+            return res.status(409).json({ message: 'Admin already exists', admin: existing });
+        }
+        const defaultAdmin = new User({
+            username: process.env.ADMIN_USERNAME || 'admin',
+            password: process.env.ADMIN_PASSWORD || 'Admin@123',
+            email: process.env.ADMIN_EMAIL || 'admin@example.com',
+            fullName: process.env.ADMIN_FULLNAME || 'System Administrator',
+            role: 'admin',
+            requiresPasswordReset: true
+        });
+        await defaultAdmin.save();
+        console.log('👑 Admin seeded via /admin-seed');
+        return res.status(201).json({ message: 'Admin created', admin: { username: defaultAdmin.username, email: defaultAdmin.email } });
+    } catch (e) {
+        console.error('Admin seed error:', e);
+        res.status(500).json({ message: 'Error creating admin' });
+    }
 });
 
 // API Routes
@@ -128,6 +188,7 @@ connectToDatabase().then(async () => {
     // Ensure there is at least one admin user
     try {
         const admins = await User.countDocuments({ role: 'admin' });
+        console.log(`🔎 Admin users found: ${admins} (DB: ${mongoose.connection?.name})`);
         if (admins === 0) {
             const defaultAdmin = new User({
                 username: process.env.ADMIN_USERNAME || 'admin',
@@ -143,6 +204,9 @@ connectToDatabase().then(async () => {
             console.log('   Temp Password:', process.env.ADMIN_PASSWORD ? '[from ENV]' : 'Admin@123');
             console.log('   Email:', defaultAdmin.email);
             console.log('   Note: requiresPasswordReset=true. Admin will be prompted to set a new password on first login.');
+        } else {
+            const existing = await User.findOne({ role: 'admin' }).select('username email');
+            console.log('✅ Admin present:', existing?.username, existing?.email);
         }
     } catch (e) {
         console.warn('Could not ensure default admin exists:', e.message);
