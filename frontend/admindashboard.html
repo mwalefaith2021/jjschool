@@ -63,6 +63,10 @@
                 <div class="content-section" id="admin-applications">
                     <div class="card">
                         <h2>Student Applications</h2>
+                         <div id="studentsToolbar" style="display:flex; gap:10px; margin-bottom:12px;">
+                            <input id="studentSearch" placeholder="Search by name or email" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;" />
+                            <button class="action-btn" onclick="loadStudents()">Refresh</button>
+                        </div>
                         <table class="students-table" id="applicationsTable">
                             <thead>
                                 <tr>
