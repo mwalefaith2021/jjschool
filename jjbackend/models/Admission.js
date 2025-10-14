@@ -72,8 +72,7 @@ const admissionSchema = new mongoose.Schema({
     
     // Additional fields
     applicationNumber: {
-        type: String,
-        unique: true
+        type: String
     },
     
     // Admin notes
@@ -84,14 +83,27 @@ const admissionSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Generate application number before saving
-admissionSchema.pre('save', function(next) {
-    if (!this.applicationNumber) {
+// Generate sequential application number before saving
+admissionSchema.pre('save', async function(next) {
+    try {
+        if (this.applicationNumber) return next();
+        const Counter = require('./Counter');
         const year = new Date().getFullYear();
-        const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-        this.applicationNumber = `JJ${year}${randomNum}`;
+        const key = `application_${year}`;
+        const doc = await Counter.findOneAndUpdate(
+            { key },
+            { $inc: { seq: 1 } },
+            { upsert: true, new: true }
+        );
+        const seq = doc.seq;
+        // Pad to at least two digits, e.g., 01, 02, ... 10, 11
+        const padded = String(seq).padStart(2, '0');
+        // Use a simple numeric reference as requested (e.g., 01, 02). If you prefer to include year, change to `${year}${padded}`.
+        this.applicationNumber = padded;
+        next();
+    } catch (e) {
+        next(e);
     }
-    next();
 });
 
 module.exports = mongoose.model('Admission', admissionSchema);
