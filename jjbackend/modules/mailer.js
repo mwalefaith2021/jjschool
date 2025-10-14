@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const net = require('net');
 
 // Create a reusable transporter with flexible configuration
 // Priority: SMTP_URL > SMTP_HOST/PARTIAL > Gmail service via EMAIL_USER/EMAIL_PASS
@@ -283,4 +284,44 @@ module.exports = {
   verifyTransporter,
   getMailerInfo: () => ({ ...mailerInfo, configured }),
   createEmailTemplate,
+  // Quick TCP connectivity check to Gmail SMTP ports to diagnose host-level egress blocks
+  diagnoseNetwork: async () => {
+    const host = 'smtp.gmail.com';
+    const ports = [465, 587];
+    const results = [];
+    for (const port of ports) {
+      results.push(await new Promise((resolve) => {
+        const start = Date.now();
+        const socket = new net.Socket();
+        const timeoutMs = Number(process.env.SMTP_DIAG_TIMEOUT || 5000);
+        let outcome = { host, port, ok: false, ms: 0, error: null };
+        socket.setTimeout(timeoutMs);
+        socket.once('connect', () => {
+          outcome.ok = true;
+          outcome.ms = Date.now() - start;
+          socket.destroy();
+          resolve(outcome);
+        });
+        socket.once('timeout', () => {
+          outcome.error = 'timeout';
+          outcome.ms = Date.now() - start;
+          socket.destroy();
+          resolve(outcome);
+        });
+        socket.once('error', (err) => {
+          outcome.error = err && err.message ? err.message : String(err);
+          outcome.ms = Date.now() - start;
+          resolve(outcome);
+        });
+        try {
+          socket.connect(port, host);
+        } catch (e) {
+          outcome.error = e.message;
+          outcome.ms = Date.now() - start;
+          resolve(outcome);
+        }
+      }));
+    }
+    return { host, results };
+  },
 };

@@ -99,6 +99,27 @@ app.get('/email-health', async (req, res) => {
     }
 });
 
+// Email diagnostics endpoint - checks raw TCP connectivity to Gmail SMTP
+app.get('/email-diagnostics', async (req, res) => {
+    try {
+        const { diagnoseNetwork } = require('./modules/mailer');
+        const diag = await diagnoseNetwork();
+        const guidance = [];
+        if (diag.results.every(r => !r.ok)) {
+            guidance.push('Outbound SMTP to smtp.gmail.com appears blocked from this host.');
+            guidance.push('Try switching to port 587 with STARTTLS (GMAIL_SMTP_PORT=587, GMAIL_SMTP_SECURE=false).');
+            guidance.push('If still blocked, your hosting plan may restrict SMTP; contact your provider to enable egress.');
+        } else if (diag.results.find(r => r.port === 465 && r.ok) && diag.results.find(r => r.port === 587 && !r.ok)) {
+            guidance.push('Port 465 (SSL) reachable; prefer GMAIL_SMTP_PORT=465, GMAIL_SMTP_SECURE=true.');
+        } else if (diag.results.find(r => r.port === 587 && r.ok) && diag.results.find(r => r.port === 465 && !r.ok)) {
+            guidance.push('Port 587 (STARTTLS) reachable; prefer GMAIL_SMTP_PORT=587, GMAIL_SMTP_SECURE=false.');
+        }
+        res.status(200).json({ ok: true, diag, guidance });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
 // Test email endpoint - sends a real test email
 app.post('/test-email', async (req, res) => {
     try {
