@@ -47,15 +47,42 @@ function buildTransporter() {
       const normalizedPass = String(process.env.EMAIL_PASS).replace(/\s+/g, '');
       console.log(`🔐 Gmail credentials found for: ${process.env.EMAIL_USER}`);
       console.log(`🔑 App password length (after normalize): ${normalizedPass.length} chars`);
-      // Gmail with App Password recommended
+      
+      // Try port 465 (SSL) first if GMAIL_USE_SSL=true, otherwise 587 (TLS)
+      const useSSL = String(process.env.GMAIL_USE_SSL || 'false').toLowerCase() === 'true';
+      const port = useSSL ? 465 : 587;
+      
+      console.log(`🔌 Attempting Gmail SMTP via port ${port} (SSL: ${useSSL})`);
+      
+      // Gmail with App Password - explicit SMTP config to handle timeouts better
       transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: process.env.EMAIL_USER, pass: normalizedPass }
+        host: 'smtp.gmail.com',
+        port: port,
+        secure: useSSL, // true for 465, false for 587 (use STARTTLS)
+        auth: { 
+          user: process.env.EMAIL_USER, 
+          pass: normalizedPass 
+        },
+        tls: {
+          rejectUnauthorized: true,
+          minVersion: 'TLSv1.2'
+        },
+        connectionTimeout: 15000, // 15 seconds
+        greetingTimeout: 8000,
+        socketTimeout: 20000,
+        pool: true, // use pooled connections
+        maxConnections: 3,
+        maxMessages: 10,
+        logger: false, // disable nodemailer's own logging
+        debug: false
       });
       configured = true;
-      mailerInfo.method = 'GMAIL_SERVICE';
+      mailerInfo.method = 'GMAIL_SMTP_EXPLICIT';
+      mailerInfo.host = 'smtp.gmail.com';
+      mailerInfo.port = port;
+      mailerInfo.secure = useSSL;
       mailerInfo.from = process.env.EMAIL_USER;
-      console.log('✅ Transporter configured via Gmail service');
+      console.log(`✅ Transporter configured via Gmail SMTP (smtp.gmail.com:${port})`);
       return;
     }
     console.warn('⚠️ No email credentials found in environment');
@@ -73,10 +100,12 @@ buildTransporter();
 async function verifyTransporter() {
   if (!transporter) return false;
   try {
+    console.log('🔍 Verifying email transporter...');
     await transporter.verify();
+    console.log('✅ Email transporter verified successfully');
     return true;
   } catch (e) {
-    console.warn('Mailer verify failed:', e.message);
+    console.warn('❌ Mailer verify failed:', e.message);
     mailerInfo.lastError = e && e.message ? e.message : String(e);
     return false;
   }
