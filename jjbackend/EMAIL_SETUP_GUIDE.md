@@ -17,6 +17,7 @@
 - ✅ Email validation before sending
 - ✅ Professional HTML email templates
 - ✅ Plain text alternatives for better deliverability
+ - ✅ Hardened Gmail-only configuration with explicit SMTP and smart port fallback (465/587)
 
 ### 2. Updated Email Templates
 All emails now use professional branded templates with:
@@ -232,6 +233,13 @@ EMAIL_PASS=xxxx xxxx xxxx xxxx   # 16-char Gmail App Password (spaces allowed)
 
 # Preferred sender (recommended):
 MAIL_FROM="J & J Secondary School" <jandjschool.developer@gmail.com>
+
+# Gmail SMTP tuning (optional)
+# GMAIL_SMTP_PORT=465          # default 465 (SSL). Use 587 for STARTTLS if needed
+# GMAIL_SMTP_SECURE=true       # set false if using port 587
+# SMTP_CONNECTION_TIMEOUT=15000
+# SMTP_GREETING_TIMEOUT=10000
+# SMTP_SOCKET_TIMEOUT=20000
 ```
 
 ### Issue: Emails delayed or slow
@@ -241,6 +249,15 @@ MAIL_FROM="J & J Secondary School" <jandjschool.developer@gmail.com>
 - The mailer uses connection pooling (5 max connections)
 - Rate limit: 5 emails per second
 - Retry logic handles temporary failures
+
+### Issue: Connection timeout on hosting platform
+
+**Solution:**
+- We now verify Gmail on startup and automatically retry with the alternate port (465 <-> 587)
+- If timeouts persist:
+   - Try setting `GMAIL_SMTP_PORT=587` and `GMAIL_SMTP_SECURE=false`
+   - Ensure outbound SMTP to smtp.gmail.com is allowed by your host
+   - Some free tiers block SMTP. Consider upgrading the plan or enabling egress
 
 ## 📧 Email Recipient Summary
 

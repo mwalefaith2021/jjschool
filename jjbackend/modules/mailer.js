@@ -49,19 +49,31 @@ function buildTransporter() {
       console.log(`🔐 Gmail credentials found for: ${process.env.EMAIL_USER}`);
       console.log(`🔑 App password length (after normalize): ${normalizedPass.length} chars`);
       
-      // Gmail with App Password - optimized configuration
+      // Gmail with App Password - explicit SMTP configuration
+      const gmailPort = Number(process.env.GMAIL_SMTP_PORT || 465); // 465 (SSL) preferred; 587 (STARTTLS) alternative
+      const gmailSecure = String(process.env.GMAIL_SMTP_SECURE || (gmailPort === 465 ? 'true' : 'false')).toLowerCase() === 'true';
+
       transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { 
-          user: process.env.EMAIL_USER, 
-          pass: normalizedPass 
+        host: 'smtp.gmail.com',
+        port: gmailPort,
+        secure: gmailSecure, // true for 465, false for 587
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: normalizedPass
         },
-        // Additional Gmail-specific settings for better reliability
         pool: true,
         maxConnections: 5,
         maxMessages: 100,
         rateDelta: 1000,
-        rateLimit: 5
+        rateLimit: 5,
+        // Timeouts to fail fast on blocked egress
+        connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT || 15000),
+        greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 10000),
+        socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 20000),
+        tls: {
+          // Ensure correct SNI and allow modern TLS
+          servername: 'smtp.gmail.com'
+        }
       });
       configured = true;
       mailerInfo.method = 'GMAIL_SERVICE';
@@ -99,6 +111,39 @@ async function verifyTransporter() {
     const errorMsg = e && e.message ? e.message : String(e);
     console.warn('❌ Mailer verify failed:', errorMsg);
     mailerInfo.lastError = errorMsg;
+    // If Gmail is configured and verify timed out, try fallback port (465 <-> 587) once
+    try {
+      const isGmail = mailerInfo.method === 'GMAIL_SERVICE' || (transporter?.options?.host === 'smtp.gmail.com');
+      if (isGmail && /timed?\s*out/i.test(errorMsg)) {
+        const currentPort = transporter.options.port;
+        const fallbackPort = currentPort === 465 ? 587 : 465;
+        const fallbackSecure = fallbackPort === 465;
+        console.warn(`🔁 Gmail verify timeout on port ${currentPort}. Retrying with port ${fallbackPort} (secure=${fallbackSecure})...`);
+        transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: fallbackPort,
+          secure: fallbackSecure,
+          auth: transporter.options.auth,
+          pool: transporter.options.pool,
+          maxConnections: transporter.options.maxConnections,
+          maxMessages: transporter.options.maxMessages,
+          rateDelta: transporter.options.rateDelta,
+          rateLimit: transporter.options.rateLimit,
+          connectionTimeout: transporter.options.connectionTimeout,
+          greetingTimeout: transporter.options.greetingTimeout,
+          socketTimeout: transporter.options.socketTimeout,
+          tls: { servername: 'smtp.gmail.com' }
+        });
+        await transporter.verify();
+        console.log('✅ Email transporter verified successfully on fallback port', fallbackPort);
+        mailerInfo.lastError = null;
+        mailerInfo.lastVerifiedAt = new Date().toISOString();
+        return true;
+      }
+    } catch (fallbackErr) {
+      console.warn('❌ Fallback verify failed:', fallbackErr?.message || String(fallbackErr));
+      mailerInfo.lastError = fallbackErr?.message || String(fallbackErr);
+    }
     return false;
   }
 }
