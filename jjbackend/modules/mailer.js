@@ -4,12 +4,21 @@ const nodemailer = require('nodemailer');
 // Priority: SMTP_URL > SMTP_HOST/PARTIAL > Gmail service via EMAIL_USER/EMAIL_PASS
 let transporter;
 let configured = false;
+let mailerInfo = {
+  configured: false,
+  method: 'none',
+  from: null,
+  host: null,
+  port: null,
+  secure: null,
+};
 
 function buildTransporter() {
   try {
     if (process.env.SMTP_URL) {
       transporter = nodemailer.createTransport(process.env.SMTP_URL);
       configured = true;
+      mailerInfo.method = 'SMTP_URL';
       return;
     }
     if (process.env.SMTP_HOST) {
@@ -23,6 +32,10 @@ function buildTransporter() {
         } : undefined
       });
       configured = true;
+      mailerInfo.method = 'SMTP_HOST';
+      mailerInfo.host = process.env.SMTP_HOST;
+      mailerInfo.port = Number(process.env.SMTP_PORT || 587);
+      mailerInfo.secure = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
       return;
     }
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
@@ -32,12 +45,15 @@ function buildTransporter() {
         auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
       });
       configured = true;
+      mailerInfo.method = 'GMAIL_SERVICE';
       return;
     }
     configured = false;
+    mailerInfo.method = 'none';
   } catch (e) {
     console.error('Mailer setup error:', e.message);
     configured = false;
+    mailerInfo.method = 'error';
   }
 }
 
@@ -61,6 +77,10 @@ function sendEmailAsync(to, subject, html, options = {}) {
     return Promise.resolve(false);
   }
   const from = options.from || process.env.MAIL_FROM || process.env.EMAIL_USER || process.env.SMTP_USER;
+  mailerInfo.from = from || mailerInfo.from;
+  try {
+    console.log('📧 Sending email', { to, subject, from, via: mailerInfo.method });
+  } catch {}
   const mailOptions = { from, to, subject, html };
   return transporter.sendMail(mailOptions)
     .then(() => true)
@@ -73,4 +93,5 @@ function sendEmailAsync(to, subject, html, options = {}) {
 module.exports = {
   sendEmailAsync,
   verifyTransporter,
+  getMailerInfo: () => ({ ...mailerInfo, configured }),
 };

@@ -13,7 +13,7 @@ const signupsRouter = require('./routes/signups');
 const paymentsRouter = require('./routes/payments');
 const usersRouter = require('./routes/users');
 const User = require('./models/User');
-const { verifyTransporter } = require('./modules/mailer');
+const { verifyTransporter, getMailerInfo } = require('./modules/mailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -93,9 +93,9 @@ app.get('/health', async (req, res) => {
 app.get('/email-health', async (req, res) => {
     try {
         const ok = await verifyTransporter();
-        res.status(ok ? 200 : 500).json({ ok });
+        res.status(ok ? 200 : 500).json({ ok, info: getMailerInfo() });
     } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
+        res.status(500).json({ ok: false, error: e.message, info: getMailerInfo() });
     }
 });
 
