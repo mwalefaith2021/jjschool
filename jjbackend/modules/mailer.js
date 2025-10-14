@@ -14,6 +14,7 @@ let mailerInfo = {
   secure: null,
   lastError: null,
   lastVerifiedAt: null,
+  fallbackTried: false,
 };
 
 function buildTransporter() {
@@ -140,6 +141,46 @@ async function verifyTransporter() {
         mailerInfo.lastError = null;
         mailerInfo.lastVerifiedAt = new Date().toISOString();
         return true;
+      }
+      // If both Gmail ports fail and fallback SMTP is defined (e.g., SMTP2GO on port 2525), try it once.
+      if (/timed?\s*out/i.test(errorMsg) && !mailerInfo.fallbackTried && process.env.FALLBACK_SMTP_HOST) {
+        console.warn('🛟 Primary SMTP timed out. Attempting fallback SMTP host:', process.env.FALLBACK_SMTP_HOST);
+        mailerInfo.fallbackTried = true;
+        const fh = process.env.FALLBACK_SMTP_HOST;
+        const fp = Number(process.env.FALLBACK_SMTP_PORT || 2525);
+        const fs = String(process.env.FALLBACK_SMTP_SECURE || 'false').toLowerCase() === 'true';
+        transporter = nodemailer.createTransport({
+          host: fh,
+          port: fp,
+            secure: fs,
+            auth: (process.env.FALLBACK_SMTP_USER && process.env.FALLBACK_SMTP_PASS) ? {
+              user: process.env.FALLBACK_SMTP_USER,
+              pass: process.env.FALLBACK_SMTP_PASS
+            } : undefined,
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100,
+            rateDelta: 1000,
+            rateLimit: 5,
+            connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT || 15000),
+            greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 10000),
+            socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 20000)
+        });
+        try {
+          await transporter.verify();
+          mailerInfo.method = 'FALLBACK_SMTP';
+          mailerInfo.host = fh;
+          mailerInfo.port = fp;
+          mailerInfo.secure = fs;
+          mailerInfo.from = process.env.MAIL_FROM || process.env.FALLBACK_SMTP_FROM || mailerInfo.from;
+          console.log('✅ Fallback SMTP transporter verified successfully');
+          mailerInfo.lastError = null;
+          mailerInfo.lastVerifiedAt = new Date().toISOString();
+          return true;
+        } catch (fallbackVerifyErr) {
+          console.warn('❌ Fallback SMTP verify failed:', fallbackVerifyErr?.message || String(fallbackVerifyErr));
+          mailerInfo.lastError = fallbackVerifyErr?.message || String(fallbackVerifyErr);
+        }
       }
     } catch (fallbackErr) {
       console.warn('❌ Fallback verify failed:', fallbackErr?.message || String(fallbackErr));
