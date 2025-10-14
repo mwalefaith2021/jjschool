@@ -18,6 +18,7 @@
 - ✅ Professional HTML email templates
 - ✅ Plain text alternatives for better deliverability
  - ✅ Hardened Gmail-only configuration with explicit SMTP and smart port fallback (465/587)
+ - ✅ Optional fallback SMTP (port 2525) for hosts blocking 465/587 (e.g., Render free tier)
 
 ### 2. Updated Email Templates
 All emails now use professional branded templates with:
@@ -240,6 +241,14 @@ MAIL_FROM="J & J Secondary School" <jandjschool.developer@gmail.com>
 # SMTP_CONNECTION_TIMEOUT=15000
 # SMTP_GREETING_TIMEOUT=10000
 # SMTP_SOCKET_TIMEOUT=20000
+ 
+# Fallback SMTP (Render free tier workaround: port 2525 remains open)
+# FALLBACK_SMTP_HOST=mail.smtp2go.com
+# FALLBACK_SMTP_PORT=2525
+# FALLBACK_SMTP_SECURE=false
+# FALLBACK_SMTP_USER=your-smtp2go-username
+# FALLBACK_SMTP_PASS=your-smtp2go-password
+# FALLBACK_SMTP_FROM="J & J Secondary School" <no-reply@your-domain.com>
 ```
 
 ### Issue: Emails delayed or slow
@@ -258,6 +267,7 @@ MAIL_FROM="J & J Secondary School" <jandjschool.developer@gmail.com>
    - Try setting `GMAIL_SMTP_PORT=587` and `GMAIL_SMTP_SECURE=false`
    - Ensure outbound SMTP to smtp.gmail.com is allowed by your host
    - Some free tiers block SMTP. Consider upgrading the plan or enabling egress
+    - Render free tier (Sept 26 2025 change) blocks ports 25/465/587. Configure fallback SMTP on port 2525 (see env vars above). The mailer will auto-switch if Gmail times out.
 
 ## 📧 Email Recipient Summary
 
