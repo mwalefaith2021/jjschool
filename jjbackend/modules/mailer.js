@@ -157,16 +157,25 @@ function sendEmailAsync(to, subject, html, options = {}) {
   if (mailerInfo.method === 'RESEND' && resendClient) {
     const from = options.from || process.env.RESEND_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER;
     mailerInfo.from = from || mailerInfo.from;
-    console.log('📧 Sending email:', { to, subject, from, via: mailerInfo.method });
+    
+    // For testing: Resend free tier only allows sending to verified email
+    // Override recipient if RESEND_TEST_EMAIL is set (for development)
+    let actualTo = to;
+    if (process.env.RESEND_TEST_EMAIL && process.env.NODE_ENV !== 'production') {
+      console.log(`⚠️ RESEND_TEST_EMAIL set: redirecting email from ${to} to ${process.env.RESEND_TEST_EMAIL}`);
+      actualTo = process.env.RESEND_TEST_EMAIL;
+    }
+    
+    console.log('📧 Sending email:', { to: actualTo, subject, from, via: mailerInfo.method });
     return resendClient.emails
-      .send({ from, to, subject, html })
+      .send({ from, to: actualTo, subject, html })
       .then((resp) => {
         console.log('✅ Resend API response:', JSON.stringify(resp, null, 2));
         if (resp && resp.data && resp.data.id) {
-          console.log('✅ Email sent via Resend:', { to, id: resp.data.id });
+          console.log('✅ Email sent via Resend:', { to: actualTo, id: resp.data.id });
           return true;
         } else if (resp && resp.id) {
-          console.log('✅ Email sent via Resend:', { to, id: resp.id });
+          console.log('✅ Email sent via Resend:', { to: actualTo, id: resp.id });
           return true;
         } else {
           console.warn('⚠️ Resend returned success but no ID:', resp);
