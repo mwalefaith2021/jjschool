@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 // Configure CORS to allow Netlify frontend and local dev.
-const allowedOriginsList = (process.env.ALLOWED_ORIGINS || 'http://localhost:8000,http://127.0.0.1:8000,https://jjsecondaryschool.netlify.app')
+const allowedOriginsList = (process.env.ALLOWED_ORIGINS || 'http://localhost:8000,http://127.0.0.1:8000,http://172.20.10.2:8000,https://jjsecondaryschool.netlify.app')
     .split(',')
     .map(o => o.trim())
     .filter(Boolean);
@@ -32,6 +32,8 @@ app.use(cors({
         if (allowedOriginsList.includes(origin)) return callback(null, true);
         // Allow any Netlify app domain
         if (/^https?:\/\/[a-z0-9-]+\.netlify\.app$/i.test(origin)) return callback(null, true);
+        // Allow local network IPs (192.168.x.x, 172.x.x.x, 10.x.x.x)
+        if (/^https?:\/\/(192\.168\.|172\.|10\.)\d+\.\d+\.\d+:\d+$/i.test(origin)) return callback(null, true);
         // Allow custom domain via wildcard env VAR ALLOW_REGEX (optional)
         try {
             if (process.env.ALLOW_ORIGIN_REGEX) {
@@ -39,6 +41,7 @@ app.use(cors({
                 if (re.test(origin)) return callback(null, true);
             }
         } catch {}
+        console.log('CORS blocked origin:', origin);
         callback(new Error(`CORS: Origin ${origin} not allowed`));
     },
     credentials: true,
@@ -58,12 +61,15 @@ app.use((req, res, next) => {
 });
 
 // Connect to MongoDB
-const mongoURL = process.env.MONGODB_URL || 'mongodb+srv://mwalefaith:Faith200203@jjsec.jyx5jvn.mongodb.net/?retryWrites=true&w=majority&appName=JJSEC';
+const mongoURL = process.env.MONGODB_URL || 'mongodb+srv://mwalefaith:Faith200203@jjsec.jyx5jvn.mongodb.net/JJSEC?retryWrites=true&w=majority&appName=JJSEC';
 
 async function connectToDatabase() {
     try {
         await mongoose.connect(mongoURL);
         console.log('✅ Successfully connected to MongoDB!');
+        console.log('   DB name:', mongoose.connection.name);
+        console.log('   Host:', mongoose.connection.host);
+        console.log('   Connection string DB:', mongoURL.split('/').pop().split('?')[0]);
     } catch (err) {
         console.error('❌ Error connecting to MongoDB:', err);
         process.exit(1);
@@ -75,8 +81,20 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'J & J Secondary School API is running',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        db: { name: mongoose.connection?.name, readyState: mongoose.connection?.readyState }
     });
+});
+
+// Admin seed status (diagnostic)
+app.get('/admin-seed-status', async (req, res) => {
+    try {
+        const count = await User.countDocuments({ role: 'admin' });
+        const sample = await User.findOne({ role: 'admin' }).select('username email isActive createdAt');
+        res.status(200).json({ db: mongoose.connection?.name, admins: { count, sample } });
+    } catch (e) {
+        res.status(500).json({ message: 'Error checking admin status' });
+    }
 });
 
 // API Routes
@@ -125,25 +143,40 @@ connectToDatabase().then(async () => {
         console.warn('Could not remove sample student:', e.message);
     }
 
-    // Ensure there is at least one admin user
+    // Ensure specific default admin exists
     try {
-        const admins = await User.countDocuments({ role: 'admin' });
-        if (admins === 0) {
+        const defaultUsername = process.env.ADMIN_USERNAME || 'admin@jjmw';
+        const defaultPassword = process.env.ADMIN_PASSWORD || 'adminPass1';
+        const defaultEmail = process.env.ADMIN_EMAIL || 'admin@jjmw.local';
+        const defaultFullName = process.env.ADMIN_FULLNAME || 'System Administrator';
+
+        console.log(`🔍 Checking for admin in database: ${mongoose.connection.name}`);
+        let existing = await User.findOne({ username: defaultUsername });
+        if (!existing) {
+            console.log(`📝 Creating admin user in database: ${mongoose.connection.name}`);
             const defaultAdmin = new User({
-                username: process.env.ADMIN_USERNAME || 'admin',
-                password: process.env.ADMIN_PASSWORD || 'Admin@123',
-                email: process.env.ADMIN_EMAIL || 'admin@example.com',
-                fullName: process.env.ADMIN_FULLNAME || 'System Administrator',
+                username: defaultUsername,
+                password: defaultPassword,
+                email: defaultEmail,
+                fullName: defaultFullName,
                 role: 'admin',
-                requiresPasswordReset: true
+                isActive: true,
+                requiresPasswordReset: false
             });
             await defaultAdmin.save();
             console.log('👑 Default admin user created');
-            console.log('   Username:', defaultAdmin.username);
-            console.log('   Temp Password:', process.env.ADMIN_PASSWORD ? '[from ENV]' : 'Admin@123');
-            console.log('   Email:', defaultAdmin.email);
-            console.log('   Note: requiresPasswordReset=true. Admin will be prompted to set a new password on first login.');
+            console.log('   Username:', defaultUsername);
+            console.log('   Password:', process.env.ADMIN_PASSWORD ? '[from ENV]' : defaultPassword);
+            console.log('   Email:', defaultEmail);
+            console.log('   Database:', mongoose.connection.name);
+        } else {
+            console.log('✅ Default admin already exists:', existing.username);
+            console.log('   In database:', mongoose.connection.name);
         }
+        
+        // Verify admin count
+        const adminCount = await User.countDocuments({ role: 'admin' });
+        console.log(`📊 Total admin users in ${mongoose.connection.name}: ${adminCount}`);
     } catch (e) {
         console.warn('Could not ensure default admin exists:', e.message);
     }

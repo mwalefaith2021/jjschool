@@ -30,14 +30,7 @@
                 
                 
                 
-                <div class="form-group">
-                    <label for="userType">Login As:</label>
-                    <select id="userType" required>
-                        <option value="">Select User Type</option>
-                        <option value="student">Student/Parent</option>
-                        <option value="admin">Administrator</option>
-                    </select>
-                </div>
+                <!-- Simplified: no user type selection -->
                 
                 <div class="form-group">
                     <label for="username">Username/Student ID:</label>
@@ -59,30 +52,23 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="admin.js"></script>
-    <script src="student.js"></script>
+    <!-- Removed admin/student script dependencies from login page -->
     <script src="auth.js"></script>
     <script>
         // Login form handling
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const userType = document.getElementById('userType').value;
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            
-            if (!userType) {
-                alert('Please select a user type');
-                return;
-            }
             
             if (!username || !password) {
                 alert('Please fill in all fields');
                 return;
             }
             
-            // Use unified auth handler (still uses existing modals for resets)
-            Auth.login(userType, username, password)
+            // Use unified auth handler
+            Auth.login(username, password)
               .catch(err => alert(err.message || 'Login failed. Please try again.'));
         });
     </script>
