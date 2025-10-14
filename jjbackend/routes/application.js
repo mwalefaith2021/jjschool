@@ -4,7 +4,7 @@ const Admission = require('../models/Admission');
 const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
-const { sendEmailAsync, verifyTransporter } = require('../modules/mailer');
+const { sendEmailAsync, verifyTransporter, createEmailTemplate } = require('../modules/mailer');
 
 // Validation middleware for admission form
 const validateAdmission = [
@@ -75,15 +75,26 @@ router.post('/submit-application', validateAdmission, async (req, res) => {
 
         const savedAdmission = await newAdmission.save();
 
-        // Email confirmation to applicant
-        // Fire-and-forget email confirmation to applicant
+        // Send confirmation email to applicant with enhanced template
+        const emailContent = `
+            <h2>Application Received Successfully!</h2>
+            <p>Dear <strong>${req.body.firstName} ${req.body.lastName}</strong>,</p>
+            <p>Thank you for applying to J & J Secondary School. We have successfully received your application.</p>
+            <div class="highlight">
+                <p><strong>Application Number:</strong> ${savedAdmission.applicationNumber}</p>
+                <p><strong>Submitted on:</strong> ${new Date(savedAdmission.dateSubmitted).toLocaleString()}</p>
+                <p><strong>Applying for:</strong> ${req.body.applyingFor}</p>
+            </div>
+            <p>Your application is now under review by our admissions team. We will notify you via this email address (<strong>${req.body.email}</strong>) once a decision has been made.</p>
+            <p><strong>Important:</strong> Please keep your application number for future reference and correspondence.</p>
+            <p>If you have any questions, please don't hesitate to contact our admissions office.</p>
+            <p>Best regards,<br/><strong>Admissions Office</strong><br/>J & J Secondary School</p>
+        `;
+        
         sendEmailAsync(
             req.body.email,
-            'Application Received - J & J Secondary School',
-            `<p>Dear ${req.body.firstName} ${req.body.lastName},</p>
-             <p>Your application (<b>${savedAdmission.applicationNumber}</b>) has been received and is under review.</p>
-             <p>We will notify you once a decision is made.</p>
-             <p>Regards,<br/>Admissions Office</p>`
+            `Application Received - ${savedAdmission.applicationNumber}`,
+            createEmailTemplate(emailContent)
         );
 
         res.status(201).json({ 
@@ -195,28 +206,77 @@ router.put('/applications/:id/status', async (req, res) => {
                 status: 'pending'
             });
 
+            const acceptedEmailContent = `
+                <h2>🎉 Congratulations! Your Application Has Been Approved</h2>
+                <p>Dear <strong>${application.personalInfo.firstName} ${application.personalInfo.lastName}</strong>,</p>
+                <p>We are delighted to inform you that your application to J & J Secondary School has been <strong>approved</strong>!</p>
+                <div class="highlight">
+                    <p><strong>Application Number:</strong> ${application.applicationNumber}</p>
+                    <p><strong>Status:</strong> Accepted ✅</p>
+                    <p><strong>Next Step:</strong> Account Activation</p>
+                </div>
+                <h3>Your Login Credentials</h3>
+                <p>Your student portal account is being prepared. You will receive your final login credentials once the administrator completes the account setup process.</p>
+                <div class="highlight">
+                    <p><strong>Temporary OTP (for verification):</strong> <span style="font-size: 1.4em; font-weight: bold; color: #2d5016;">${otp}</span></p>
+                    <p><strong>Valid for:</strong> 30 minutes</p>
+                    <p><strong>Suggested Username:</strong> ${desiredUsername}</p>
+                </div>
+                <p><strong>What happens next?</strong></p>
+                <ul>
+                    <li>Our administrator will finalize your account setup</li>
+                    <li>You will receive an email with your final login credentials</li>
+                    <li>You can then access the student portal to view fees, schedules, and more</li>
+                </ul>
+                <p>Welcome to the J & J Secondary School family! We look forward to your academic journey with us.</p>
+                <p>Best regards,<br/><strong>Admissions Office</strong><br/>J & J Secondary School</p>
+            `;
+            
             sendEmailAsync(
                 application.contactInfo.email,
-                'Application Approved - Next Steps',
-                `<p>Congratulations ${application.personalInfo.firstName},</p>
-                 <p>Your application (<b>${application.applicationNumber}</b>) has been approved.</p>
-                 <p>Temporary login OTP: <b>${otp}</b> (valid for 30 minutes). You will receive access once admin finalizes signup.</p>
-                 <p>Regards,<br/>Admissions Office</p>`
+                `🎉 Application Approved - ${application.applicationNumber}`,
+                createEmailTemplate(acceptedEmailContent)
             );
         } else if (status === 'rejected') {
+            const rejectedEmailContent = `
+                <h2>Application Decision Update</h2>
+                <p>Dear <strong>${application.personalInfo.firstName} ${application.personalInfo.lastName}</strong>,</p>
+                <p>Thank you for your interest in J & J Secondary School and for taking the time to complete the application process.</p>
+                <div class="highlight">
+                    <p><strong>Application Number:</strong> ${application.applicationNumber}</p>
+                    <p><strong>Status:</strong> Not Approved</p>
+                </div>
+                <p>After careful consideration, we regret to inform you that we are unable to offer you admission at this time.</p>
+                ${adminNotes ? `<p><strong>Additional Information:</strong><br/>${adminNotes}</p>` : ''}
+                <p>We understand this news may be disappointing. Please know that this decision does not reflect on your potential as a student.</p>
+                <p>We wish you all the best in your future academic endeavors and encourage you to consider reapplying in the future.</p>
+                <p>If you have any questions, please feel free to contact our admissions office.</p>
+                <p>Best regards,<br/><strong>Admissions Office</strong><br/>J & J Secondary School</p>
+            `;
+            
             sendEmailAsync(
                 application.contactInfo.email,
-                'Application Decision - J & J Secondary School',
-                `<p>Dear ${application.personalInfo.firstName},</p>
-                 <p>We regret to inform you your application (<b>${application.applicationNumber}</b>) was not successful.</p>
-                 <p>${adminNotes ? 'Notes: ' + adminNotes : ''}</p>
-                 <p>Regards,<br/>Admissions Office</p>`
+                `Application Decision - ${application.applicationNumber}`,
+                createEmailTemplate(rejectedEmailContent)
             );
         } else {
+            const updateEmailContent = `
+                <h2>Application Status Update</h2>
+                <p>Dear <strong>${application.personalInfo.firstName} ${application.personalInfo.lastName}</strong>,</p>
+                <p>This is to notify you that your application status has been updated.</p>
+                <div class="highlight">
+                    <p><strong>Application Number:</strong> ${application.applicationNumber}</p>
+                    <p><strong>New Status:</strong> ${status}</p>
+                    <p><strong>Updated on:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+                <p>Your application is still being processed. We will keep you informed of any further updates.</p>
+                <p>Best regards,<br/><strong>Admissions Office</strong><br/>J & J Secondary School</p>
+            `;
+            
             sendEmailAsync(
                 application.contactInfo.email,
-                'Application Update - J & J Secondary School',
-                `<p>Your application (<b>${application.applicationNumber}</b>) status changed to <b>${status}</b>.</p>`
+                `Application Update - ${application.applicationNumber}`,
+                createEmailTemplate(updateEmailContent)
             );
         }
 

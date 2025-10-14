@@ -1,6 +1,4 @@
 const nodemailer = require('nodemailer');
-let sgMail = null;
-let resendClient = null;
 
 // Create a reusable transporter with flexible configuration
 // Priority: SMTP_URL > SMTP_HOST/PARTIAL > Gmail service via EMAIL_USER/EMAIL_PASS
@@ -19,36 +17,6 @@ let mailerInfo = {
 function buildTransporter() {
   try {
     console.log('🔧 Building email transporter...');
-    // Prefer Resend API if available (HTTPS 443)
-    if (process.env.RESEND_API_KEY) {
-      try {
-        const { Resend } = require('resend');
-        resendClient = new Resend(process.env.RESEND_API_KEY);
-        configured = true;
-        mailerInfo.method = 'RESEND';
-        mailerInfo.from = process.env.RESEND_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER || null;
-        console.log('✅ Transporter configured via Resend API');
-        return;
-      } catch (e) {
-        console.error('❌ Failed to initialize Resend:', e.message);
-        mailerInfo.lastError = e.message;
-      }
-    }
-    // Prefer SendGrid API if available (avoids SMTP port blocks)
-    if (process.env.SENDGRID_API_KEY) {
-      try {
-        sgMail = require('@sendgrid/mail');
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-        configured = true;
-        mailerInfo.method = 'SENDGRID';
-        mailerInfo.from = process.env.SENDGRID_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER || null;
-        console.log('✅ Transporter configured via SendGrid API');
-        return;
-      } catch (e) {
-        console.error('❌ Failed to initialize SendGrid:', e.message);
-        mailerInfo.lastError = e.message;
-      }
-    }
     if (process.env.SMTP_URL) {
       transporter = nodemailer.createTransport(process.env.SMTP_URL);
       configured = true;
@@ -80,41 +48,25 @@ function buildTransporter() {
       console.log(`🔐 Gmail credentials found for: ${process.env.EMAIL_USER}`);
       console.log(`🔑 App password length (after normalize): ${normalizedPass.length} chars`);
       
-      // Try port 465 (SSL) first if GMAIL_USE_SSL=true, otherwise 587 (TLS)
-      const useSSL = String(process.env.GMAIL_USE_SSL || 'false').toLowerCase() === 'true';
-      const port = useSSL ? 465 : 587;
-      
-      console.log(`🔌 Attempting Gmail SMTP via port ${port} (SSL: ${useSSL})`);
-      
-      // Gmail with App Password - explicit SMTP config to handle timeouts better
+      // Gmail with App Password - optimized configuration
       transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: port,
-        secure: useSSL, // true for 465, false for 587 (use STARTTLS)
+        service: 'gmail',
         auth: { 
           user: process.env.EMAIL_USER, 
           pass: normalizedPass 
         },
-        tls: {
-          rejectUnauthorized: true,
-          minVersion: 'TLSv1.2'
-        },
-        connectionTimeout: 15000, // 15 seconds
-        greetingTimeout: 8000,
-        socketTimeout: 20000,
-        pool: true, // use pooled connections
-        maxConnections: 3,
-        maxMessages: 10,
-        logger: false, // disable nodemailer's own logging
-        debug: false
+        // Additional Gmail-specific settings for better reliability
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+        rateDelta: 1000,
+        rateLimit: 5
       });
       configured = true;
-      mailerInfo.method = 'GMAIL_SMTP_EXPLICIT';
-      mailerInfo.host = 'smtp.gmail.com';
-      mailerInfo.port = port;
-      mailerInfo.secure = useSSL;
+      mailerInfo.method = 'GMAIL_SERVICE';
       mailerInfo.from = process.env.EMAIL_USER;
-      console.log(`✅ Transporter configured via Gmail SMTP (smtp.gmail.com:${port})`);
+      console.log('✅ Transporter configured via Gmail service');
+      console.log(`📧 Default sender: ${process.env.EMAIL_USER}`);
       return;
     }
     console.warn('⚠️ No email credentials found in environment');
@@ -124,120 +76,142 @@ function buildTransporter() {
     console.error('❌ Mailer setup error:', e.message);
     configured = false;
     mailerInfo.method = 'error';
+    mailerInfo.lastError = e.message;
   }
 }
 
 buildTransporter();
 
 async function verifyTransporter() {
-  // SendGrid path: treat API key presence as configured
-  if (mailerInfo.method === 'SENDGRID' && sgMail) {
-    return true;
+  if (!transporter) {
+    console.warn('⚠️ No transporter configured for verification');
+    return false;
   }
-  // Resend path
-  if (mailerInfo.method === 'RESEND' && resendClient) {
-    return true;
-  }
-  if (!transporter) return false;
   try {
     console.log('🔍 Verifying email transporter...');
     await transporter.verify();
     console.log('✅ Email transporter verified successfully');
+    mailerInfo.lastError = null;
     return true;
   } catch (e) {
-    console.warn('❌ Mailer verify failed:', e.message);
-    mailerInfo.lastError = e && e.message ? e.message : String(e);
+    const errorMsg = e && e.message ? e.message : String(e);
+    console.warn('❌ Mailer verify failed:', errorMsg);
+    mailerInfo.lastError = errorMsg;
     return false;
   }
 }
 
-// Fire-and-forget email sender. Logs failures but never throws to callers.
-function sendEmailAsync(to, subject, html, options = {}) {
-  // Resend path
-  if (mailerInfo.method === 'RESEND' && resendClient) {
-    const from = options.from || process.env.RESEND_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER;
-    mailerInfo.from = from || mailerInfo.from;
-    
-    // For testing: Resend free tier only allows sending to verified email
-    // Override recipient if RESEND_TEST_EMAIL is set (for development)
-    let actualTo = to;
-    if (process.env.RESEND_TEST_EMAIL && process.env.NODE_ENV !== 'production') {
-      console.log(`⚠️ RESEND_TEST_EMAIL set: redirecting email from ${to} to ${process.env.RESEND_TEST_EMAIL}`);
-      actualTo = process.env.RESEND_TEST_EMAIL;
-    }
-    
-    console.log('📧 Sending email:', { to: actualTo, subject, from, via: mailerInfo.method });
-    return resendClient.emails
-      .send({ from, to: actualTo, subject, html })
-      .then((resp) => {
-        console.log('✅ Resend API response:', JSON.stringify(resp, null, 2));
-        if (resp && resp.data && resp.data.id) {
-          console.log('✅ Email sent via Resend:', { to: actualTo, id: resp.data.id });
-          return true;
-        } else if (resp && resp.id) {
-          console.log('✅ Email sent via Resend:', { to: actualTo, id: resp.id });
-          return true;
-        } else {
-          console.warn('⚠️ Resend returned success but no ID:', resp);
-          // Check for error in response
-          if (resp && resp.error) {
-            console.error('❌ Resend API error:', JSON.stringify(resp.error, null, 2));
-            mailerInfo.lastError = JSON.stringify(resp.error);
-            return false;
-          }
-          return true; // assume sent if no error
-        }
-      })
-      .catch(err => {
-        console.error('❌ Email send error (Resend) - full error:', err);
-        const m = (err && err.message) || String(err);
-        console.error('❌ Email send error (Resend):', m);
-        mailerInfo.lastError = m;
-        return false;
-      });
-  }
-  // SendGrid path
-  if (mailerInfo.method === 'SENDGRID' && sgMail) {
-    const from = options.from || process.env.SENDGRID_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER;
-    mailerInfo.from = from || mailerInfo.from;
-    const msg = { to, from, subject, html };
-    console.log('📧 Sending email:', { to, subject, from, via: mailerInfo.method });
-    return sgMail
-      .send(msg)
-      .then(([resp]) => {
-        console.log('✅ Email sent via SendGrid:', { to, statusCode: resp && resp.statusCode });
-        return true;
-      })
-      .catch(err => {
-        const m = (err && err.response && err.response.body && JSON.stringify(err.response.body)) || (err && err.message) || String(err);
-        console.error('❌ Email send error (SendGrid):', m);
-        mailerInfo.lastError = m;
-        return false;
-      });
-  }
-  // Nodemailer path (SMTP)
+// Helper function to create consistent email templates
+function createEmailTemplate(content, title = 'J & J Secondary School') {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #165022 0%, #2d5016 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
+    .footer { background: #f5f5f5; padding: 20px; text-align: center; font-size: 0.9em; color: #666; border-radius: 0 0 10px 10px; }
+    .button { display: inline-block; padding: 12px 30px; background: #2d5016; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+    .highlight { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 15px 0; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>J & J Secondary School</h1>
+    <p style="margin: 0; opacity: 0.9;">Excellence in Education</p>
+  </div>
+  <div class="content">
+    ${content}
+  </div>
+  <div class="footer">
+    <p><strong>J & J Secondary School</strong></p>
+    <p>Admissions Office | jandjschool.developer@gmail.com</p>
+    <p style="font-size: 0.85em; color: #999;">This is an automated message. Please do not reply directly to this email.</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+// Fire-and-forget email sender with retry logic. Logs failures but never throws to callers.
+async function sendEmailAsync(to, subject, html, options = {}) {
   if (!configured || !transporter) {
     console.warn('⚠️ Email not configured; skipping email to', to);
     return Promise.resolve(false);
   }
-  const from = options.from || process.env.MAIL_FROM || process.env.EMAIL_USER || process.env.SMTP_USER;
+
+  // Validate recipient email
+  if (!to || typeof to !== 'string' || !to.includes('@')) {
+    console.error('❌ Invalid recipient email address:', to);
+    return Promise.resolve(false);
+  }
+
+  const from = options.from || process.env.MAIL_FROM || `"J & J Secondary School" <${process.env.EMAIL_USER}>` || process.env.EMAIL_USER;
   mailerInfo.from = from || mailerInfo.from;
-  const mailOptions = { from, to, subject, html };
-  console.log('📧 Sending email:', { to, subject, from, via: mailerInfo.method });
-  return transporter.sendMail(mailOptions)
-    .then((info) => {
-      console.log('✅ Email sent successfully:', { to, messageId: info.messageId });
+  
+  const mailOptions = { 
+    from, 
+    to: to.trim(), 
+    subject, 
+    html,
+    // Add text alternative for better deliverability
+    text: html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ')
+  };
+  
+  console.log('📧 Attempting to send email:', { 
+    to: to.trim(), 
+    subject, 
+    from, 
+    via: mailerInfo.method 
+  });
+
+  // Retry logic: try up to 2 times
+  const maxRetries = 2;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`✅ Email sent successfully (attempt ${attempt}/${maxRetries}):`, { 
+        to: to.trim(), 
+        messageId: info.messageId,
+        response: info.response 
+      });
+      mailerInfo.lastError = null; // Clear any previous errors
       return true;
-    })
-    .catch(err => {
-      console.error('❌ Email send error:', err && err.message ? err.message : err);
-      mailerInfo.lastError = err && err.message ? err.message : String(err);
-      return false;
-    });
+    } catch (err) {
+      const errorMsg = err && err.message ? err.message : String(err);
+      console.error(`❌ Email send error (attempt ${attempt}/${maxRetries}):`, {
+        to: to.trim(),
+        error: errorMsg,
+        code: err.code,
+        command: err.command
+      });
+      mailerInfo.lastError = errorMsg;
+      
+      // Don't retry on authentication or configuration errors
+      if (errorMsg.includes('Invalid login') || 
+          errorMsg.includes('Username and Password not accepted') ||
+          errorMsg.includes('AUTH')) {
+        console.error('🚫 Authentication error - stopping retry attempts');
+        return false;
+      }
+      
+      // Wait before retry (except on last attempt)
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+      }
+    }
+  }
+  
+  return false;
 }
 
 module.exports = {
   sendEmailAsync,
   verifyTransporter,
   getMailerInfo: () => ({ ...mailerInfo, configured }),
+  createEmailTemplate,
 };
