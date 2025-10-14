@@ -161,10 +161,26 @@ function sendEmailAsync(to, subject, html, options = {}) {
     return resendClient.emails
       .send({ from, to, subject, html })
       .then((resp) => {
-        console.log('✅ Email sent via Resend:', { to, id: resp && resp.id });
-        return true;
+        console.log('✅ Resend API response:', JSON.stringify(resp, null, 2));
+        if (resp && resp.data && resp.data.id) {
+          console.log('✅ Email sent via Resend:', { to, id: resp.data.id });
+          return true;
+        } else if (resp && resp.id) {
+          console.log('✅ Email sent via Resend:', { to, id: resp.id });
+          return true;
+        } else {
+          console.warn('⚠️ Resend returned success but no ID:', resp);
+          // Check for error in response
+          if (resp && resp.error) {
+            console.error('❌ Resend API error:', JSON.stringify(resp.error, null, 2));
+            mailerInfo.lastError = JSON.stringify(resp.error);
+            return false;
+          }
+          return true; // assume sent if no error
+        }
       })
       .catch(err => {
+        console.error('❌ Email send error (Resend) - full error:', err);
         const m = (err && err.message) || String(err);
         console.error('❌ Email send error (Resend):', m);
         mailerInfo.lastError = m;
