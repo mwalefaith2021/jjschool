@@ -99,6 +99,37 @@ app.get('/email-health', async (req, res) => {
     }
 });
 
+// Test email endpoint - sends a real test email
+app.post('/test-email', async (req, res) => {
+    try {
+        const { sendEmailAsync } = require('./modules/mailer');
+        const testEmail = req.body.to || process.env.EMAIL_USER || 'test@example.com';
+        const ok = await verifyTransporter();
+        if (!ok) {
+            return res.status(500).json({ 
+                ok: false, 
+                message: 'Email transport verification failed', 
+                info: getMailerInfo() 
+            });
+        }
+        const sent = await sendEmailAsync(
+            testEmail,
+            'Test Email from J & J School API',
+            `<h3>Test Email</h3>
+             <p>This is a test email sent at ${new Date().toISOString()}</p>
+             <p>If you received this, your email configuration is working correctly!</p>`
+        );
+        res.status(sent ? 200 : 500).json({ 
+            ok: sent, 
+            message: sent ? 'Test email sent successfully' : 'Failed to send test email',
+            to: testEmail,
+            info: getMailerInfo()
+        });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
 // Admin seed status (diagnostic)
 app.get('/admin-seed-status', async (req, res) => {
     try {
