@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 let sgMail = null;
+let resendClient = null;
 
 // Create a reusable transporter with flexible configuration
 // Priority: SMTP_URL > SMTP_HOST/PARTIAL > Gmail service via EMAIL_USER/EMAIL_PASS
@@ -18,6 +19,21 @@ let mailerInfo = {
 function buildTransporter() {
   try {
     console.log('🔧 Building email transporter...');
+    // Prefer Resend API if available (HTTPS 443)
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const { Resend } = require('resend');
+        resendClient = new Resend(process.env.RESEND_API_KEY);
+        configured = true;
+        mailerInfo.method = 'RESEND';
+        mailerInfo.from = process.env.RESEND_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER || null;
+        console.log('✅ Transporter configured via Resend API');
+        return;
+      } catch (e) {
+        console.error('❌ Failed to initialize Resend:', e.message);
+        mailerInfo.lastError = e.message;
+      }
+    }
     // Prefer SendGrid API if available (avoids SMTP port blocks)
     if (process.env.SENDGRID_API_KEY) {
       try {
@@ -118,6 +134,10 @@ async function verifyTransporter() {
   if (mailerInfo.method === 'SENDGRID' && sgMail) {
     return true;
   }
+  // Resend path
+  if (mailerInfo.method === 'RESEND' && resendClient) {
+    return true;
+  }
   if (!transporter) return false;
   try {
     console.log('🔍 Verifying email transporter...');
@@ -133,6 +153,24 @@ async function verifyTransporter() {
 
 // Fire-and-forget email sender. Logs failures but never throws to callers.
 function sendEmailAsync(to, subject, html, options = {}) {
+  // Resend path
+  if (mailerInfo.method === 'RESEND' && resendClient) {
+    const from = options.from || process.env.RESEND_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER;
+    mailerInfo.from = from || mailerInfo.from;
+    console.log('📧 Sending email:', { to, subject, from, via: mailerInfo.method });
+    return resendClient.emails
+      .send({ from, to, subject, html })
+      .then((resp) => {
+        console.log('✅ Email sent via Resend:', { to, id: resp && resp.id });
+        return true;
+      })
+      .catch(err => {
+        const m = (err && err.message) || String(err);
+        console.error('❌ Email send error (Resend):', m);
+        mailerInfo.lastError = m;
+        return false;
+      });
+  }
   // SendGrid path
   if (mailerInfo.method === 'SENDGRID' && sgMail) {
     const from = options.from || process.env.SENDGRID_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER;
