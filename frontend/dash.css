@@ -34,18 +34,18 @@ body {
     justify-content: center;
 }
 
-.container {
-    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-secondary) 50%);
+/*.container {
+    background: rgb(20, 89, 36);
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
     overflow: hidden;
     width: 100%;
     max-width: 1200px;
     min-height: 600px;
-}
+}*/
 
 /* Back to Home Button */
-.back-to-home {
+/*.back-to-home {
     position: fixed;
     top: 20px;
     left: 20px;
@@ -71,7 +71,7 @@ body {
 .back-to-home::before {
     content: '🏠';
     font-size: 1.1em;
-}
+}*/
 
 /* Auth Container */
 .auth-container {
@@ -107,14 +107,15 @@ body {
 .logo-image {
     max-width: 100px;
     max-height: 100px;
-    background: #f6f6f6;
+    background: #e5e7de;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 0.9em;
     font-weight: normal;
-    box-shadow: 0 4px 15px rgba(2, 34, 12, 0.3);
+    box-shadow: 0 4px 15px #cfd1c8;
+;
     overflow: hidden;
 }
 
@@ -145,7 +146,7 @@ body {
 }
 
 .school-logo h1 {
-    color: var(--color-primary-light);
+    color: rgb(33, 88, 33);
     font-size: 2.2em;
     margin-bottom: 5px;
     font-weight: 700;
@@ -171,7 +172,7 @@ body {
 .form-group input, .form-group select {
     width: 100%;
     padding: 15px;
-    border: 1px solid #182f18;
+    border: 1px solid #427b42;
     border-radius: 10px;
     font-size: 16px;
     transition: border-color 0.3s;
@@ -186,8 +187,8 @@ body {
 .auth-btn {
     width: 100%;
     padding: 15px;
-    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-secondary) 100%);
-    color: white;
+    background: rgb(33, 88, 33);
+    color: rgb(251, 251, 251);
     border: none;
     border-radius: 10px;
     font-size: 18px;
@@ -218,9 +219,7 @@ body {
 }
 
 /*
- * ====================================================================
- * Dashboard Styles
- * ====================================================================
+  Dashboard Styles
  */
 
 .dashboard {
@@ -234,7 +233,7 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, #0d480b 0%, #3b7b4e 100%);
+    background: green;
     color: white;
     padding: 20px 40px;
     display: flex;
@@ -337,9 +336,7 @@ body {
 }
 
 /*
- * ====================================================================
  * Card & Information Display
- * ====================================================================
  */
 
 .card {
@@ -384,9 +381,7 @@ body {
 }
 
 /*
- * ====================================================================
  * Fees, Payments, & Tables
- * ====================================================================
  */
 
 .fee-item {
