@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+let sgMail = null;
 
 // Create a reusable transporter with flexible configuration
 // Priority: SMTP_URL > SMTP_HOST/PARTIAL > Gmail service via EMAIL_USER/EMAIL_PASS
@@ -17,6 +18,21 @@ let mailerInfo = {
 function buildTransporter() {
   try {
     console.log('🔧 Building email transporter...');
+    // Prefer SendGrid API if available (avoids SMTP port blocks)
+    if (process.env.SENDGRID_API_KEY) {
+      try {
+        sgMail = require('@sendgrid/mail');
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        configured = true;
+        mailerInfo.method = 'SENDGRID';
+        mailerInfo.from = process.env.SENDGRID_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER || null;
+        console.log('✅ Transporter configured via SendGrid API');
+        return;
+      } catch (e) {
+        console.error('❌ Failed to initialize SendGrid:', e.message);
+        mailerInfo.lastError = e.message;
+      }
+    }
     if (process.env.SMTP_URL) {
       transporter = nodemailer.createTransport(process.env.SMTP_URL);
       configured = true;
@@ -98,6 +114,10 @@ function buildTransporter() {
 buildTransporter();
 
 async function verifyTransporter() {
+  // SendGrid path: treat API key presence as configured
+  if (mailerInfo.method === 'SENDGRID' && sgMail) {
+    return true;
+  }
   if (!transporter) return false;
   try {
     console.log('🔍 Verifying email transporter...');
@@ -113,6 +133,26 @@ async function verifyTransporter() {
 
 // Fire-and-forget email sender. Logs failures but never throws to callers.
 function sendEmailAsync(to, subject, html, options = {}) {
+  // SendGrid path
+  if (mailerInfo.method === 'SENDGRID' && sgMail) {
+    const from = options.from || process.env.SENDGRID_FROM || process.env.MAIL_FROM || process.env.EMAIL_USER;
+    mailerInfo.from = from || mailerInfo.from;
+    const msg = { to, from, subject, html };
+    console.log('📧 Sending email:', { to, subject, from, via: mailerInfo.method });
+    return sgMail
+      .send(msg)
+      .then(([resp]) => {
+        console.log('✅ Email sent via SendGrid:', { to, statusCode: resp && resp.statusCode });
+        return true;
+      })
+      .catch(err => {
+        const m = (err && err.response && err.response.body && JSON.stringify(err.response.body)) || (err && err.message) || String(err);
+        console.error('❌ Email send error (SendGrid):', m);
+        mailerInfo.lastError = m;
+        return false;
+      });
+  }
+  // Nodemailer path (SMTP)
   if (!configured || !transporter) {
     console.warn('⚠️ Email not configured; skipping email to', to);
     return Promise.resolve(false);
