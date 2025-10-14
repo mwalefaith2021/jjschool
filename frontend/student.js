@@ -58,13 +58,22 @@ document.addEventListener("DOMContentLoaded", async function () {
     console.log('Student Dashboard scripts initialized');
     
     // Check authentication on dashboard page load
-    if (window.location.pathname.includes('studentdashboard.html')) {
-      const ok = await checkAuth();
-      if (!ok) return;
-      initializeStudentDashboard();
-      loadUserProfile();
-      renderBackendStudentProfile();
-      fetchAndRenderStudentProfile();
+        if (window.location.pathname.includes('studentdashboard.html')) {
+            const ok = await checkAuth();
+            if (!ok) return;
+
+            // If first-time login (OTP), force password change prompt immediately
+            try {
+                const profile = JSON.parse(localStorage.getItem('userProfile')) || {};
+                if (profile && profile.requiresPasswordReset && profile.id) {
+                    showPasswordResetModal(profile.id);
+                }
+            } catch {}
+
+            initializeStudentDashboard();
+            loadUserProfile();
+            renderBackendStudentProfile();
+            fetchAndRenderStudentProfile();
       
       const paymentForm = document.getElementById("paymentForm");
       if (paymentForm) {
