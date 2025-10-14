@@ -119,18 +119,97 @@ app.use('/api', signupsRouter);
 app.use('/api', paymentsRouter);
 app.use('/api', usersRouter);
 
+// Simple API index for human-friendly discovery
+app.get('/api', (req, res) => {
+    res.status(200).json({
+        message: 'J & J Secondary School API',
+        timestamp: new Date().toISOString(),
+        health: ['/health', '/email-health', '/admin-seed-status'],
+        endpoints: [
+            // Auth
+            'POST /api/login',
+            'POST /api/register',
+            'POST /api/logout',
+            'GET /api/verify',
+            'POST /api/change-password',
+            // Admissions / Applications
+            'POST /api/submit-application',
+            'GET /api/applications',
+            'GET /api/applications/:id',
+            'PUT /api/applications/:id/status',
+            'GET /api/applications-stats',
+            // Students
+            'GET /api/students',
+            'GET /api/students/:id',
+            'GET /api/students/:id/application',
+            'PUT /api/students/:id',
+            'DELETE /api/students/:id',
+            'GET /api/students-stats',
+            // Fees
+            'GET /api/fees',
+            'GET /api/fees/student/:studentId',
+            'POST /api/fees',
+            'PUT /api/fees/:id/payment',
+            'GET /api/fees-stats',
+            // Payments
+            'POST /api/payments',
+            'GET /api/payments',
+            'PUT /api/payments/:id/status',
+            // Pending signups
+            'GET /api/pending-signups',
+            'POST /api/pending-signups/:id/approve',
+            'POST /api/pending-signups/:id/reject',
+            // Users (admin)
+            'POST /api/users/:id/reset-password'
+        ]
+    });
+});
+
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ 
         message: 'API endpoint not found',
+        hint: 'Visit GET /api for a full list of endpoints',
         availableEndpoints: [
+            // Health
             'GET /health',
-            'POST /api/submit-application',
-            'GET /api/applications',
+            'GET /email-health',
+            'GET /admin-seed-status',
+            // Auth
             'POST /api/login',
             'POST /api/register',
+            'POST /api/logout',
+            'GET /api/verify',
+            'POST /api/change-password',
+            // Admissions / Applications
+            'POST /api/submit-application',
+            'GET /api/applications',
+            'GET /api/applications/:id',
+            'PUT /api/applications/:id/status',
+            'GET /api/applications-stats',
+            // Students
             'GET /api/students',
-            'GET /api/fees'
+            'GET /api/students/:id',
+            'GET /api/students/:id/application',
+            'PUT /api/students/:id',
+            'DELETE /api/students/:id',
+            'GET /api/students-stats',
+            // Fees
+            'GET /api/fees',
+            'GET /api/fees/student/:studentId',
+            'POST /api/fees',
+            'PUT /api/fees/:id/payment',
+            'GET /api/fees-stats',
+            // Payments
+            'POST /api/payments',
+            'GET /api/payments',
+            'PUT /api/payments/:id/status',
+            // Pending Signups
+            'GET /api/pending-signups',
+            'POST /api/pending-signups/:id/approve',
+            'POST /api/pending-signups/:id/reject',
+            // Users (admin)
+            'POST /api/users/:id/reset-password'
         ]
     });
 });

@@ -11,6 +11,7 @@ let mailerInfo = {
   host: null,
   port: null,
   secure: null,
+  lastError: null,
 };
 
 function buildTransporter() {
@@ -39,10 +40,12 @@ function buildTransporter() {
       return;
     }
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      // Normalize Gmail App Password (Google shows it with spaces; remove them)
+      const normalizedPass = String(process.env.EMAIL_PASS).replace(/\s+/g, '');
       // Gmail with App Password recommended
       transporter = nodemailer.createTransport({
         service: 'gmail',
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        auth: { user: process.env.EMAIL_USER, pass: normalizedPass }
       });
       configured = true;
       mailerInfo.method = 'GMAIL_SERVICE';
@@ -66,6 +69,7 @@ async function verifyTransporter() {
     return true;
   } catch (e) {
     console.warn('Mailer verify failed:', e.message);
+    mailerInfo.lastError = e && e.message ? e.message : String(e);
     return false;
   }
 }
@@ -86,6 +90,7 @@ function sendEmailAsync(to, subject, html, options = {}) {
     .then(() => true)
     .catch(err => {
       console.error('Email send error:', err && err.message ? err.message : err);
+      mailerInfo.lastError = err && err.message ? err.message : String(err);
       return false;
     });
 }
