@@ -93,8 +93,8 @@ All emails now use professional branded templates with:
 ## 🧪 Testing Guide
 
 ### Step 1: Restart Your Backend Server
-```bash
-# If running locally
+```powershell
+# If running locally (Windows PowerShell)
 cd jjbackend
 npm start
 
@@ -113,7 +113,7 @@ Look for these lines on startup:
 ```
 
 ### Step 3: Verify Email Health
-```bash
+```powershell
 curl https://your-backend-url.com/email-health
 ```
 
@@ -131,10 +131,8 @@ Expected response:
 ```
 
 ### Step 4: Send Test Email
-```bash
-curl -X POST https://your-backend-url.com/test-email \
-  -H "Content-Type: application/json" \
-  -d '{"to": "your-personal-email@example.com"}'
+```powershell
+curl -Method POST https://your-backend-url.com/test-email -Headers @{"Content-Type"="application/json"} -Body '{"to": "your-personal-email@example.com"}'
 ```
 
 Check your inbox (and spam folder) for the test email.
@@ -207,6 +205,34 @@ When an email is sent, you'll see these logs:
 2. Check `EMAIL_USER` and `EMAIL_PASS` are set
 3. Ensure `require('dotenv').config()` is at top of `server.js`
 4. Restart server completely
+
+### Issue: Sender rejected or bad sender syntax
+
+**Solution:**
+1. Set a valid sender in `.env` (must match auth user for Gmail):
+   - `MAIL_FROM="J & J Secondary School" <jandjschool.developer@gmail.com>`
+2. Restart the server so the new env var is loaded
+3. Check `/email-health` for `from` value
+
+### Required environment variables
+
+Create a `.env` file in `jjbackend/` with:
+
+```
+EMAIL_USER=jandjschool.developer@gmail.com
+EMAIL_PASS=xxxx xxxx xxxx xxxx   # 16-char Gmail App Password (spaces allowed)
+# Optional SMTP alternative (overrides Gmail):
+# SMTP_URL=smtp://user:pass@smtp.example.com:587
+# or
+# SMTP_HOST=smtp.example.com
+# SMTP_PORT=587
+# SMTP_SECURE=false
+# SMTP_USER=xxxx
+# SMTP_PASS=xxxx
+
+# Preferred sender (recommended):
+MAIL_FROM="J & J Secondary School" <jandjschool.developer@gmail.com>
+```
 
 ### Issue: Emails delayed or slow
 

@@ -12,6 +12,7 @@ let mailerInfo = {
   port: null,
   secure: null,
   lastError: null,
+  lastVerifiedAt: null,
 };
 
 function buildTransporter() {
@@ -92,6 +93,7 @@ async function verifyTransporter() {
     await transporter.verify();
     console.log('✅ Email transporter verified successfully');
     mailerInfo.lastError = null;
+    mailerInfo.lastVerifiedAt = new Date().toISOString();
     return true;
   } catch (e) {
     const errorMsg = e && e.message ? e.message : String(e);
@@ -150,8 +152,28 @@ async function sendEmailAsync(to, subject, html, options = {}) {
     return Promise.resolve(false);
   }
 
-  const from = options.from || process.env.MAIL_FROM || `"J & J Secondary School" <${process.env.EMAIL_USER}>` || process.env.EMAIL_USER;
-  mailerInfo.from = from || mailerInfo.from;
+  // Determine a safe 'from' address. Prefer explicit option, then MAIL_FROM,
+  // then the authenticated user on the transport. Avoid constructing
+  // "<undefined>" which causes SMTP rejections.
+  const transportAuthUser = (transporter && transporter.options && transporter.options.auth && transporter.options.auth.user) || process.env.EMAIL_USER || process.env.SMTP_USER;
+  const computedFrom = options.from 
+    || process.env.MAIL_FROM 
+    || (transportAuthUser ? `"J & J Secondary School" <${transportAuthUser}>` : undefined);
+  if (!computedFrom) {
+    console.error('❌ No valid FROM address could be determined. Set MAIL_FROM or EMAIL_USER/SMTP_USER.');
+    return Promise.resolve(false);
+  }
+  const from = computedFrom;
+  mailerInfo.from = from;
+  
+  // Proactively verify the transporter if we haven't done so or last verify failed
+  if (!mailerInfo.lastVerifiedAt || mailerInfo.lastError) {
+    const ok = await verifyTransporter();
+    if (!ok) {
+      console.error('❌ Email transport not ready; aborting send. Last error:', mailerInfo.lastError);
+      return false;
+    }
+  }
   
   const mailOptions = { 
     from, 
@@ -194,7 +216,9 @@ async function sendEmailAsync(to, subject, html, options = {}) {
       // Don't retry on authentication or configuration errors
       if (errorMsg.includes('Invalid login') || 
           errorMsg.includes('Username and Password not accepted') ||
-          errorMsg.includes('AUTH')) {
+          errorMsg.includes('AUTH') ||
+          errorMsg.includes('Bad sender address syntax') ||
+          errorMsg.includes('Sender address rejected')) {
         console.error('🚫 Authentication error - stopping retry attempts');
         return false;
       }

@@ -307,6 +307,15 @@ connectToDatabase().then(async () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);
         console.log(`📊 Health check: http://localhost:${PORT}/health`);
         console.log(`📝 API Documentation: http://localhost:${PORT}/api`);
+        // Proactively verify mail transport on startup for visibility
+        verifyTransporter().then(ok => {
+            const info = getMailerInfo();
+            console.log(`📧 Mailer startup status: ${ok ? 'READY' : 'NOT READY'}`);
+            console.log('    method:', info.method, '| from:', info.from || '(unset)');
+            if (!ok && info.lastError) {
+                console.warn('    lastError:', info.lastError);
+            }
+        }).catch(e => console.warn('Mailer verify error:', e.message));
     });
 });
 
