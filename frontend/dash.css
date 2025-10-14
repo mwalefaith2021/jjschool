@@ -233,7 +233,7 @@ body {
 }
 
 .header {
-    background: var(--color-background);
+    background: rgb(11, 78, 11);
     color: white;
     padding: 20px 40px;
     display: flex;
@@ -251,7 +251,7 @@ body {
     width: 90px;
     height: 90px;
     background: var(--color-surface);
-    border: 1px solid rgba(6, 79, 21, 0.8);
+    border: 1px solid rgba(244, 246, 241, 0.8);
     border-radius: 50%;
     display: flex;
     justify-content: center;
