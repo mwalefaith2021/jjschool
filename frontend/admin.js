@@ -319,30 +319,102 @@ async function approveApplication(applicationId) {
     try {
         const ok = await showConfirm('Approve Application', 'Are you sure you want to approve this application?');
         if (!ok) return;
+        
+        // Show loading state
+        const approveBtn = document.querySelector(`button[onclick="approveApplication('${applicationId}')"]`);
+        if (approveBtn) {
+            approveBtn.disabled = true;
+            approveBtn.textContent = 'Approving...';
+        }
+        
+        console.log('Approving application:', applicationId);
         const res = await fetch(`${API_BASE}/api/applications/${applicationId}/status`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'accepted', adminNotes: 'Approved by admin' })
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                status: 'accepted', 
+                adminNotes: 'Approved by admin',
+                reviewedBy: 'admin' 
+            })
         });
-        if (!res.ok) throw new Error('Failed to approve');
+        
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Failed to approve application');
+        }
+        
+        const result = await res.json();
+        console.log('Application approved:', result);
+        
+        alert('Application approved successfully! Email notification sent to applicant.');
+        
         closeApplicationModal();
-        fetchAndRenderApplications();
+        await fetchAndRenderApplications();
+        
         // Pending signups list may have changed
         setTimeout(displayPendingSignupsFromAPI, 300);
-    } catch (e) { alert(e.message); }
+    } catch (e) { 
+        console.error('Error approving application:', e);
+        alert('Error approving application: ' + e.message); 
+        
+        // Reset button state
+        const approveBtn = document.querySelector(`button[onclick="approveApplication('${applicationId}')"]`);
+        if (approveBtn) {
+            approveBtn.disabled = false;
+            approveBtn.textContent = 'Approve';
+        }
+    }
 }
 
 async function rejectApplication(applicationId) {
     try {
-        const reason = await showPrompt('Reject Application', 'Enter reason for rejection');
-        if (!reason) return;
+        const reason = await showPrompt('Reject Application', 'Enter reason for rejection (required):');
+        if (!reason || reason.trim() === '') {
+            alert('Rejection reason is required.');
+            return;
+        }
+        
+        // Show loading state
+        const rejectBtn = document.querySelector(`button[onclick="rejectApplication('${applicationId}')"]`);
+        if (rejectBtn) {
+            rejectBtn.disabled = true;
+            rejectBtn.textContent = 'Rejecting...';
+        }
+        
+        console.log('Rejecting application:', applicationId, 'Reason:', reason);
         const res = await fetch(`${API_BASE}/api/applications/${applicationId}/status`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'rejected', adminNotes: reason })
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                status: 'rejected', 
+                adminNotes: reason.trim(),
+                reviewedBy: 'admin'
+            })
         });
-        if (!res.ok) throw new Error('Failed to reject');
+        
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Failed to reject application');
+        }
+        
+        const result = await res.json();
+        console.log('Application rejected:', result);
+        
+        alert('Application rejected successfully! Email notification sent to applicant.');
+        
         closeApplicationModal();
-        fetchAndRenderApplications();
-    } catch (e) { alert(e.message); }
+        await fetchAndRenderApplications();
+    } catch (e) { 
+        console.error('Error rejecting application:', e);
+        alert('Error rejecting application: ' + e.message); 
+        
+        // Reset button state
+        const rejectBtn = document.querySelector(`button[onclick="rejectApplication('${applicationId}')"]`);
+        if (rejectBtn) {
+            rejectBtn.disabled = false;
+            rejectBtn.textContent = 'Reject';
+        }
+    }
 }
 
 // No-op, left for backward compatibility
@@ -351,14 +423,52 @@ function updateApplicationStatus() {}
 async function fetchAndRenderApplications() {
     const tbody = document.getElementById('applicationsTbody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 12px;">Loading...</td></tr>';
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 12px;">Loading applications...</td></tr>';
+    
     try {
-        const res = await fetch(`${API_BASE}/api/applications`);
-        if (!res.ok) throw new Error('Failed to fetch applications');
+        console.log('Fetching applications from:', `${API_BASE}/api/applications`);
+        
+        const res = await fetch(`${API_BASE}/api/applications`, {
+            cache: 'no-cache', // Prevent caching issues
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(errorData.message || `HTTP ${res.status}: Failed to fetch applications`);
+        }
+        
         const { data } = await res.json();
-        tbody.innerHTML = data.map(app => renderApplicationRow(app)).join('');
+        console.log('Applications fetched:', data.length);
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 12px; color: #666;">No applications found.</td></tr>';
+        } else {
+            tbody.innerHTML = data.map(app => renderApplicationRow(app)).join('');
+        }
+        
+        // Update the applications count if there's a counter element
+        const countElement = document.querySelector('.applications-count');
+        if (countElement) {
+            countElement.textContent = data.length;
+        }
+        
     } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color:#dc3545; text-align:center;">${e.message}</td></tr>`;
+        console.error('Error fetching applications:', e);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="color:#dc3545; text-align:center; padding: 20px;">
+                    <div>❌ ${e.message}</div>
+                    <div style="margin-top: 10px;">
+                        <button onclick="fetchAndRenderApplications()" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Retry</button>
+                    </div>
+                </td>
+            </tr>
+        `;
     }
 }
 
@@ -370,12 +480,12 @@ function renderApplicationRow(app) {
     const statusBadge = app.status === 'accepted' ? 'status-approved' : app.status === 'rejected' ? 'status-rejected' : 'status-pending';
     return `
         <tr>
-            <td>${app.applicationNumber}</td>
-            <td>${name}</td>
-            <td>${klass}</td>
-            <td>${date}</td>
-            <td><span class="status-badge ${statusBadge}">${app.status}</span></td>
-            <td>
+            <td data-label="Application ID">${app.applicationNumber}</td>
+            <td data-label="Student Name">${name}</td>
+            <td data-label="Applied Class">${klass}</td>
+            <td data-label="Application Date">${date}</td>
+            <td data-label="Status"><span class="status-badge ${statusBadge}">${app.status}</span></td>
+            <td data-label="Actions">
                 <button class="action-btn view-btn" onclick="viewApplication('${id}')">View</button>
                 ${app.status === 'pending' || app.status === 'under_review' ? `<button class="action-btn approve-btn" onclick=\"approveApplication('${id}')\">Approve</button>
                 <button class="action-btn reject-btn" onclick=\"rejectApplication('${id}')\">Reject</button>` : ''}
@@ -633,10 +743,10 @@ async function loadStudents() {
         if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No students found</td></tr>'; return; }
         tbody.innerHTML = filtered.map(s => `
             <tr>
-                <td>${s.fullName || '-'}</td>
-                <td>${s.email || '-'}</td>
-                <td>${s.username || '-'}</td>
-                <td>
+                <td data-label="Name">${s.fullName || '-'}</td>
+                <td data-label="Email">${s.email || '-'}</td>
+                <td data-label="Username">${s.username || '-'}</td>
+                <td data-label="Actions">
                     <button class="action-btn" onclick="resetStudentPassword('${s._id}', '${s.fullName?.replace(/"/g,'&quot;') || ''}', '${s.email || ''}')">Reset PIN</button>
                     <button class="action-btn view-btn" onclick="openEditStudent('${s._id}', '${s.fullName?.replace(/"/g,'&quot;') || ''}', '${s.email || ''}')">Edit</button>
                     <button class="action-btn" onclick="viewStudent('${s._id}')">Overview</button>

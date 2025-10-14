@@ -9,6 +9,13 @@
     var developmentBase = 'http://localhost:3000';
     var base = explicit || (isLocal ? developmentBase : productionBase);
     window.API_BASE = base.replace(/\/$/, '');
+    
+    // Log API configuration for debugging
+    console.log('🔧 API Configuration:');
+    console.log('   - Hostname:', window.location.hostname);
+    console.log('   - Is Local:', isLocal);
+    console.log('   - API Base:', window.API_BASE);
+    console.log('   - Environment:', isLocal ? 'Development' : 'Production');
 })();
 
 

@@ -674,9 +674,51 @@ body {
         min-height: auto;
     }
 
+    /* Enhanced Dashboard Mobile Layout */
+    .dashboard {
+        min-height: 100vh;
+        background: var(--color-background);
+    }
+
     .dashboard-content {
         flex-direction: column;
         min-height: auto;
+    }
+    
+    .header {
+        padding: 10px 15px;
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .header-logo {
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .header-logo-image {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .header-text h1 {
+        font-size: 1.1em;
+        margin: 0;
+        line-height: 1.2;
+    }
+    
+    .header-text p {
+        font-size: 0.8em;
+        margin: 0;
+    }
+    
+    .logout-btn {
+        align-self: center;
+        margin-top: 5px;
+        padding: 8px 16px;
+        font-size: 0.9em;
     }
     
     .sidebar {
@@ -686,79 +728,234 @@ body {
         padding: 0;
         border-right: none;
         border-bottom: 1px solid var(--color-border);
+        background: var(--color-surface);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        /* Add smooth scrolling */
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .sidebar::-webkit-scrollbar {
+        height: 3px;
+    }
+    
+    .sidebar::-webkit-scrollbar-track {
+        background: var(--color-border);
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb {
+        background: var(--color-secondary);
+        border-radius: 3px;
     }
     
     .nav-item {
         white-space: nowrap;
         min-width: 120px;
         text-align: center;
-        padding: 15px 20px;
+        padding: 12px 15px;
+        font-size: 0.9em;
+        border-right: 1px solid var(--color-border);
+    }
+    
+    .nav-item:last-child {
+        border-right: none;
     }
     
     .main-content {
+        padding: 15px;
+        min-height: calc(100vh - 200px);
+        overflow-x: hidden;
+    }
+    
+    .card {
         padding: 20px;
-        min-height: calc(100vh - 140px);
+        margin-bottom: 20px;
+        border-radius: 10px;
+    }
+    
+    .card h2 {
+        font-size: 1.3em;
+        margin-bottom: 15px;
     }
     
     .profile-info, .form-row, .payment-info-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .info-item {
+        padding: 12px;
+    }
+    
+    .info-item label {
+        font-size: 0.9em;
+    }
+    
+    .info-item span {
+        font-size: 1em;
     }
     
     .fee-item {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+        padding: 15px;
     }
     
+    /* Enhanced Table Responsiveness */
     .students-table {
-        font-size: 0.9em;
+        font-size: 0.85em;
+        min-width: 100%;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
     }
     
+    .students-table thead,
+    .students-table tbody,
     .students-table th,
+    .students-table td,
+    .students-table tr {
+        display: block;
+    }
+    
+    .students-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    .students-table tr {
+        background: white;
+        border: 1px solid var(--color-border);
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
     .students-table td {
-        padding: 10px 8px;
+        border: none;
+        position: relative;
+        padding: 8px 8px 8px 50%;
+        white-space: normal;
+        text-align: left;
+    }
+    
+    .students-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+        color: var(--color-text-dark);
     }
     
     .action-btn {
-        padding: 6px 10px;
+        padding: 6px 12px;
         font-size: 0.8em;
         margin: 2px;
-    }
-    
-    .header {
-        padding: 15px 20px;
-    }
-    
-    .header-logo {
-        gap: 10px;
-    }
-    
-    .header-text h1 {
-        font-size: 1.3em;
-    }
-    
-    .header-text p {
-        font-size: 0.8em;
+        border-radius: 4px;
+        display: inline-block;
     }
     
     .signup-item {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+        padding: 15px;
     }
     
     .detail-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
+        margin-bottom: 10px;
     }
     
     .detail-label {
         min-width: auto;
+        font-size: 0.9em;
     }
     
     .detail-value {
         text-align: left;
+        font-size: 0.9em;
+    }
+    
+    /* Modal Improvements for Mobile */
+    #applicationModal > div,
+    #appModal > div {
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        margin: 20px;
+    }
+    
+    /* Pending Signups Mobile */
+    .pending-signups {
+        padding: 12px;
+    }
+    
+    /* Payment Info Mobile */
+    .payment-method-card {
+        margin-bottom: 15px;
+    }
+    
+    .payment-details {
+        padding: 15px;
+    }
+    
+    /* Form Improvements */
+    .form-group input,
+    .form-group select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Touch-friendly buttons */
+    .nav-item {
+        min-height: 44px; /* iOS touch target minimum */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .action-btn {
+        min-height: 40px;
+        min-width: 80px;
+        touch-action: manipulation; /* Prevents double-tap zoom */
+    }
+    
+    .auth-btn {
+        min-height: 48px;
+        touch-action: manipulation;
+    }
+    
+    /* Better loading states for mobile */
+    .auth-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    /* Improve scrolling on mobile */
+    .main-content {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+    }
+    
+    /* Better modal positioning on mobile */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
     }
 }
 
