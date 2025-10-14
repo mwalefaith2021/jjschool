@@ -12,7 +12,7 @@ router.get('/students', async (req, res) => {
             .sort({ createdAt: -1 });
         
         res.status(200).json({
-            message: 'Students retrieved successfully',
+            message: 'Students retrieved successfully.',
             count: students.length,
             data: students
         });
