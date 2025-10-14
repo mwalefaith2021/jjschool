@@ -233,7 +233,7 @@ body {
 }
 
 .header {
-    background: green;
+    background: var(--color-background);
     color: white;
     padding: 20px 40px;
     display: flex;
@@ -314,7 +314,7 @@ body {
 }
 
 .nav-item:hover, .nav-item.active {
-    background: var(--color-secondary);
+    background: rgb(14, 90, 14);
     color: white;
 }
 
@@ -628,10 +628,7 @@ body {
     align-items: center;
 }
 
-/*
- * ====================================================================
- * Mobile & Responsive Adjustments
- * ====================================================================
+/* Mobile & Responsive Adjustments
  */
 
 @media (max-width: 768px) {

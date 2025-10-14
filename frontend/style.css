@@ -396,34 +396,30 @@ nav {
     font-size: 1.5rem;
 }
 
-/* ---------------------------------------------------- */
-/* --- Programs Section (FIXED TO MATCH ACADEMIC IMAGE) --- */
-/* ---------------------------------------------------- */
+
+/* Programs Section */
 .programs {
     padding: 80px 0;
     background: #f4f7f9; /* Light, neutral background */
 }
 
 .programs-grid {
-    /* Enforce 3 columns for large screens, ensuring responsive wrap */
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px; /* Ample space between cards */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
     margin-top: 60px;
 }
 
 .program-card {
-    /* Base Card Styling for uniformity and spacing */
-    background-color: #f7fff7; /* Light cream/green tint background */
+    background-color: #f7fff7; 
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    padding: 30px;
+    padding: 30px ;
     display: flex;
     flex-direction: column;
-    /* CRITICAL FIX: Ensures all cards stretch to the height of the tallest card in the row */
-    height: 100%; 
-    text-align: center; /* Center content to match the image style */
+
+    text-align: center;
 }
 
 .program-card:hover {
