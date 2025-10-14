@@ -1,17 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-});
-
-async function sendEmail(to, subject, html) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
-    await transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html });
-}
+const { sendEmailAsync } = require('../modules/mailer');
 
 // Admin: reset a user's password to a temporary OTP and require reset
 router.post('/users/:id/reset-password', async (req, res) => {
@@ -22,7 +12,7 @@ router.post('/users/:id/reset-password', async (req, res) => {
         user.password = otp;
         user.requiresPasswordReset = true;
         await user.save();
-        await sendEmail(
+        sendEmailAsync(
             user.email,
             'Password Reset - J & J Secondary School',
             `<p>Dear ${user.fullName},</p>

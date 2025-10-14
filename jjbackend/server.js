@@ -13,6 +13,7 @@ const signupsRouter = require('./routes/signups');
 const paymentsRouter = require('./routes/payments');
 const usersRouter = require('./routes/users');
 const User = require('./models/User');
+const { verifyTransporter } = require('./modules/mailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -77,13 +78,25 @@ async function connectToDatabase() {
 }
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+    const mailOk = await verifyTransporter();
     res.status(200).json({ 
         status: 'OK', 
         message: 'J & J Secondary School API is running',
         timestamp: new Date().toISOString(),
-        db: { name: mongoose.connection?.name, readyState: mongoose.connection?.readyState }
+        db: { name: mongoose.connection?.name, readyState: mongoose.connection?.readyState },
+        mail: { configured: mailOk }
     });
+});
+
+// Email health endpoint
+app.get('/email-health', async (req, res) => {
+    try {
+        const ok = await verifyTransporter();
+        res.status(ok ? 200 : 500).json({ ok });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
 });
 
 // Admin seed status (diagnostic)

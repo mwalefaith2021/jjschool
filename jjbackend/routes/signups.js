@@ -2,17 +2,7 @@ const express = require('express');
 const router = express.Router();
 const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-});
-
-async function sendEmail(to, subject, html) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
-    await transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html });
-}
+const { sendEmailAsync } = require('../modules/mailer');
 
 // List pending signups
 router.get('/pending-signups', async (req, res) => {
@@ -47,7 +37,7 @@ router.post('/pending-signups/:id/approve', async (req, res) => {
         signup.status = 'approved';
         await signup.save();
 
-        await sendEmail(
+        sendEmailAsync(
             signup.email,
             'Your Student Account Is Ready',
             `<p>Dear ${signup.fullName},</p>
@@ -72,7 +62,7 @@ router.post('/pending-signups/:id/reject', async (req, res) => {
         if (!signup || signup.status !== 'pending') return res.status(404).json({ message: 'Signup not found' });
         signup.status = 'rejected';
         await signup.save();
-        await sendEmail(
+        sendEmailAsync(
             signup.email,
             'Account Request Rejected',
             `<p>Dear ${signup.fullName},</p>

@@ -4,28 +4,7 @@ const Admission = require('../models/Admission');
 const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
-const nodemailer = require('nodemailer');
-
-// Email transporter
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
-async function sendEmail(to, subject, html) {
-    try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.warn('Email creds missing; skipping email send.');
-            return;
-        }
-        await transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html });
-    } catch (err) {
-        console.error('Email send error:', err.message);
-    }
-}
+const { sendEmailAsync, verifyTransporter } = require('../modules/mailer');
 
 // Validation middleware for admission form
 const validateAdmission = [
@@ -97,7 +76,8 @@ router.post('/submit-application', validateAdmission, async (req, res) => {
         const savedAdmission = await newAdmission.save();
 
         // Email confirmation to applicant
-        await sendEmail(
+        // Fire-and-forget email confirmation to applicant
+        sendEmailAsync(
             req.body.email,
             'Application Received - J & J Secondary School',
             `<p>Dear ${req.body.firstName} ${req.body.lastName},</p>
@@ -198,7 +178,7 @@ router.put('/applications/:id/status', async (req, res) => {
                 message: 'Application not found' 
             });
         }
-        // Notify applicant depending on status
+    // Notify applicant depending on status (non-blocking)
         if (status === 'accepted') {
             // Create PendingSignup entry
             const desiredUsername = `${application.personalInfo.firstName}.${application.personalInfo.lastName}`.toLowerCase();
@@ -215,7 +195,7 @@ router.put('/applications/:id/status', async (req, res) => {
                 status: 'pending'
             });
 
-            await sendEmail(
+            sendEmailAsync(
                 application.contactInfo.email,
                 'Application Approved - Next Steps',
                 `<p>Congratulations ${application.personalInfo.firstName},</p>
@@ -224,7 +204,7 @@ router.put('/applications/:id/status', async (req, res) => {
                  <p>Regards,<br/>Admissions Office</p>`
             );
         } else if (status === 'rejected') {
-            await sendEmail(
+            sendEmailAsync(
                 application.contactInfo.email,
                 'Application Decision - J & J Secondary School',
                 `<p>Dear ${application.personalInfo.firstName},</p>
@@ -233,7 +213,7 @@ router.put('/applications/:id/status', async (req, res) => {
                  <p>Regards,<br/>Admissions Office</p>`
             );
         } else {
-            await sendEmail(
+            sendEmailAsync(
                 application.contactInfo.email,
                 'Application Update - J & J Secondary School',
                 `<p>Your application (<b>${application.applicationNumber}</b>) status changed to <b>${status}</b>.</p>`
