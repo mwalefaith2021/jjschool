@@ -251,7 +251,7 @@ body {
     width: 100px;
     height: 100px;
     background: var(--color-surface);
-    border: 1px rgba(7, 63, 25, 0.9);
+    border: 4px rgba(7, 63, 25, 0.9);
     border-radius: 50%;
     display: flex;
     justify-content: center;
