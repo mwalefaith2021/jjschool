@@ -130,30 +130,112 @@ function createEmailTemplate(content, title = 'J & J Secondary School') {
 }
 
 // Build raw RFC 2822 email and send through Gmail API
-function buildMime({ from, to, subject, html, text }) {
+function buildMime({ from, to, subject, html, text, attachments = [] }) {
   const boundary = '----=_Part_JJSchool_' + Date.now();
+  const mixedBoundary = '----=_Mixed_JJSchool_' + (Date.now() + 1);
   const safeSubject = subject.replace(/\r|\n/g, ' ').trim();
   const plain = (text || html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g,' ')).trim();
-  return [
+
+  // RFC 2047 encode non-ASCII in Subject using UTF-8 Base64
+  function encodeHeaderUTF8(val) {
+    if (/^[\x00-\x7F]*$/.test(val)) return val; // ASCII only
+    const b64 = Buffer.from(val, 'utf8').toString('base64');
+    return `=?UTF-8?B?${b64}?=`;
+  }
+
+  // Wrap base64 content at 76 chars per line per MIME recommendations
+  function wrapBase64(b64) {
+    return b64.replace(/.{1,76}/g, m => m + '\r\n').trim() + '\r\n';
+  }
+
+  const encodedSubject = encodeHeaderUTF8(safeSubject);
+  const plainB64 = wrapBase64(Buffer.from(plain, 'utf8').toString('base64'));
+  const htmlB64 = wrapBase64(Buffer.from(html, 'utf8').toString('base64'));
+
+  function detectMimeType(filename) {
+    const ext = (filename || '').toLowerCase().split('.').pop();
+    const map = {
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      txt: 'text/plain',
+      csv: 'text/csv',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    };
+    return map[ext] || 'application/octet-stream';
+  }
+
+  if (!attachments || attachments.length === 0) {
+    return [
+      `From: ${from}`,
+      `To: ${to}`,
+      `Subject: ${encodedSubject}`,
+      'MIME-Version: 1.0',
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+      '',
+      `--${boundary}`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      'Content-Transfer-Encoding: base64',
+      '',
+      plainB64,
+      `--${boundary}`,
+      'Content-Type: text/html; charset="UTF-8"',
+      'Content-Transfer-Encoding: base64',
+      '',
+      htmlB64,
+      `--${boundary}--`,
+      ''
+    ].join('\r\n');
+  }
+
+  // Build multipart/mixed with inner multipart/alternative and attachments
+  const lines = [
     `From: ${from}`,
     `To: ${to}`,
-    `Subject: ${safeSubject}`,
+    `Subject: ${encodedSubject}`,
     'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${mixedBoundary}"`,
+    '',
+    `--${mixedBoundary}`,
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     '',
     `--${boundary}`,
     'Content-Type: text/plain; charset="UTF-8"',
-    'Content-Transfer-Encoding: 7bit',
+    'Content-Transfer-Encoding: base64',
     '',
-    plain,
+    plainB64,
     `--${boundary}`,
     'Content-Type: text/html; charset="UTF-8"',
-    'Content-Transfer-Encoding: 7bit',
+    'Content-Transfer-Encoding: base64',
     '',
-    html,
-    `--${boundary}--`,
-    ''
-  ].join('\r\n');
+    htmlB64,
+    `--${boundary}--`
+  ];
+
+  for (const att of attachments) {
+    if (!att || !att.content) continue;
+    const filename = att.filename || 'attachment';
+    const ctype = att.contentType || detectMimeType(filename);
+    const contentBuf = Buffer.isBuffer(att.content) ? att.content : Buffer.from(att.content);
+    const contentB64 = wrapBase64(contentBuf.toString('base64'));
+    lines.push(
+      `--${mixedBoundary}`,
+      `Content-Type: ${ctype}; name="${filename}"`,
+      'Content-Transfer-Encoding: base64',
+      `Content-Disposition: attachment; filename="${filename}"`,
+      '',
+      contentB64.trim(),
+      ''
+    );
+  }
+
+  lines.push(`--${mixedBoundary}--`, '');
+  return lines.join('\r\n');
 }
 
 function base64UrlEncode(str) {
@@ -185,7 +267,14 @@ async function sendEmailAsync(to, subject, html, options = {}) {
   console.log('📧 (Gmail API) Sending email:', { to: to.trim(), subject, from });
   try {
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-    const raw = base64UrlEncode(buildMime({ from, to: to.trim(), subject, html }));
+    const raw = base64UrlEncode(buildMime({ 
+      from, 
+      to: to.trim(), 
+      subject, 
+      html, 
+      text: options.text, 
+      attachments: options.attachments || [] 
+    }));
     const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
     console.log('✅ Gmail API email sent:', { id: res.data.id, threadId: res.data.threadId });
     mailerInfo.lastError = null;

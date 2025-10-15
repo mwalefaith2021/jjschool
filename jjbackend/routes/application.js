@@ -5,6 +5,8 @@ const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
 const { sendEmailAsync, verifyTransporter, createEmailTemplate } = require('../modules/mailer');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Validation middleware for admission form
 const validateAdmission = [
@@ -26,7 +28,7 @@ const validateAdmission = [
 ];
 
 // POST route to handle application form submission
-router.post('/submit-application', validateAdmission, async (req, res) => {
+router.post('/submit-application', upload.single('attachment'), validateAdmission, async (req, res) => {
     try {
         // Check for validation errors
         const errors = validationResult(req);
@@ -73,7 +75,7 @@ router.post('/submit-application', validateAdmission, async (req, res) => {
             }
         });
 
-        const savedAdmission = await newAdmission.save();
+    const savedAdmission = await newAdmission.save();
 
         // Send confirmation email to applicant with enhanced template
         const emailContent = `
@@ -96,6 +98,36 @@ router.post('/submit-application', validateAdmission, async (req, res) => {
             `Application Received - ${savedAdmission.applicationNumber}`,
             createEmailTemplate(emailContent)
         );
+
+        // If an attachment was uploaded, forward it to the school inbox with a short notice
+        if (req.file) {
+            const schoolInbox = process.env.GMAIL_SENDER || 'jandjschool.developer@gmail.com';
+            const notifyHtml = createEmailTemplate(`
+                <h2>New Application Submitted</h2>
+                <p>An applicant has uploaded a document with their application.</p>
+                <div class="highlight">
+                    <p><strong>Applicant:</strong> ${req.body.firstName} ${req.body.lastName}</p>
+                    <p><strong>Application Number:</strong> ${savedAdmission.applicationNumber}</p>
+                    <p><strong>Email:</strong> ${req.body.email}</p>
+                    <p><strong>Uploaded file:</strong> ${req.file.originalname}</p>
+                </div>
+                <p>The uploaded file is attached to this email.</p>
+            `);
+            await sendEmailAsync(
+                schoolInbox,
+                `New Application Attachment - ${savedAdmission.applicationNumber}`,
+                notifyHtml,
+                {
+                    attachments: [
+                        {
+                            filename: req.file.originalname || 'attachment',
+                            content: req.file.buffer,
+                            contentType: req.file.mimetype
+                        }
+                    ]
+                }
+            );
+        }
 
         res.status(201).json({ 
             message: 'Application submitted successfully!',
