@@ -217,11 +217,6 @@ router.put('/applications/:id/status', async (req, res) => {
                 </div>
                 <h3>Your Login Credentials</h3>
                 <p>Your student portal account is being prepared. You will receive your final login credentials once the administrator completes the account setup process.</p>
-                <div class="highlight">
-                    <p><strong>Temporary OTP (for verification):</strong> <span style="font-size: 1.4em; font-weight: bold; color: #2d5016;">${otp}</span></p>
-                    <p><strong>Valid for:</strong> 30 minutes</p>
-                    <p><strong>Suggested Username:</strong> ${desiredUsername}</p>
-                </div>
                 <p><strong>What happens next?</strong></p>
                 <ul>
                     <li>Our administrator will finalize your account setup</li>
