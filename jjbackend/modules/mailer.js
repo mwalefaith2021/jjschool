@@ -51,12 +51,40 @@ async function verifyTransporter() { // name retained for compatibility
     console.log('🔍 Verifying Gmail API credentials...');
     const token = await getAccessToken();
     if (!token) return false;
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-    const profile = await gmail.users.getProfile({ userId: 'me' });
+    // Verify granted scopes on the access token
+    let scopes = [];
+    try {
+      const info = await oauth2Client.getTokenInfo(token);
+      // getTokenInfo returns either a space-delimited string or an array depending on lib version
+      const scopeStr = Array.isArray(info.scopes) ? info.scopes.join(' ') : (info.scope || '');
+      scopes = Array.isArray(info.scopes) ? info.scopes : scopeStr.split(/\s+/).filter(Boolean);
+    } catch (e) {
+      // If token info fails, surface the error but continue to try a minimal API if possible
+      console.warn('⚠️ Could not retrieve token info to check scopes:', e.message);
+    }
+
+    const hasSendScope = scopes.length === 0 || scopes.includes('https://www.googleapis.com/auth/gmail.send');
+    if (!hasSendScope) {
+      const msg = 'Access token/refresh token missing required gmail.send scope';
+      mailerInfo.lastError = msg;
+      console.error('❌ Gmail API verify failed:', msg);
+      return false;
+    }
+
+    // Optionally fetch profile only if gmail.readonly is present, but do not fail if it's missing
+    if (scopes.includes('https://www.googleapis.com/auth/gmail.readonly')) {
+      try {
+        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+        const profile = await gmail.users.getProfile({ userId: 'me' });
+        mailerInfo.from = process.env.GMAIL_SENDER || profile.data.emailAddress || mailerInfo.from;
+        console.log('✅ Gmail API verified for:', profile.data.emailAddress);
+      } catch (e) {
+        console.warn('⚠️ Gmail profile fetch skipped/failed (read scope not granted or API error):', e.message);
+      }
+    }
+
     mailerInfo.lastVerifiedAt = new Date().toISOString();
     mailerInfo.lastError = null;
-    mailerInfo.from = process.env.GMAIL_SENDER || profile.data.emailAddress || mailerInfo.from;
-    console.log('✅ Gmail API verified for:', profile.data.emailAddress);
     return true;
   } catch (e) {
     mailerInfo.lastError = e.message;
