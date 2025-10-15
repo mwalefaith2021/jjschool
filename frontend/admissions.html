@@ -158,11 +158,18 @@
                             <label for="previousSchool">Previous School(if any)*</label>
                             <input type="text" id="previousSchool" name="previousSchool" >
                         </div>
-                         <div class="form-group">
-                           <label for="attachment">Upload Required Documents*</label>
-                                 <input type="file" id="attachment" name="attachment" accept=".pdf,.doc,.docx,.jpg,.png" required>
-                                 <small>Accepted file types: PDF, DOC, DOCX, JPG, PNG. Max size: 10MB.</small>
-                         </div>
+                        <div class="form-group">
+                            <label for="attachments">Upload Required Documents*</label>
+                            <div id="file-upload-container">
+                                <div class="file-input-wrapper">
+                                    <input type="file" name="attachments" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+                                    <button type="button" class="remove-file-btn" style="display: none;">✕ Remove</button>
+                                </div>
+                            </div>
+                            <button type="button" id="add-more-files-btn" class="btn-secondary">+ Add More Files</button>
+                            <small style="display: block; margin-top: 5px;">Accepted: PDF, DOC, DOCX, JPG, PNG. Max 10MB per file, up to 5 files total.</small>
+                            <div id="file-list" style="margin-top: 10px; font-size: 0.9em; color: #666;"></div>
+                        </div>
                     </div>
 
                     <div class="form-section">

@@ -6,7 +6,10 @@ const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
 const { sendEmailAsync, verifyTransporter, createEmailTemplate } = require('../modules/mailer');
 const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const upload = multer({ 
+    storage: multer.memoryStorage(), 
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB per file
+});
 
 // Validation middleware for admission form
 const validateAdmission = [
@@ -28,7 +31,7 @@ const validateAdmission = [
 ];
 
 // POST route to handle application form submission
-router.post('/submit-application', upload.single('attachment'), validateAdmission, async (req, res) => {
+router.post('/submit-application', upload.array('attachments', 5), validateAdmission, async (req, res) => {
     try {
         // Check for validation errors
         const errors = validationResult(req);
@@ -99,33 +102,36 @@ router.post('/submit-application', upload.single('attachment'), validateAdmissio
             createEmailTemplate(emailContent)
         );
 
-        // If an attachment was uploaded, forward it to the school inbox with a short notice
-        if (req.file) {
+        // If attachments were uploaded, forward them to the school inbox with a short notice
+        if (req.files && req.files.length > 0) {
             const schoolInbox = process.env.GMAIL_SENDER || 'jandjschool.developer@gmail.com';
+            const fileList = req.files.map(f => `<li>${f.originalname} (${(f.size / 1024).toFixed(2)} KB)</li>`).join('');
             const notifyHtml = createEmailTemplate(`
                 <h2>New Application Submitted</h2>
-                <p>An applicant has uploaded a document with their application.</p>
+                <p>An applicant has uploaded ${req.files.length} document(s) with their application.</p>
                 <div class="highlight">
                     <p><strong>Applicant:</strong> ${req.body.firstName} ${req.body.lastName}</p>
                     <p><strong>Application Number:</strong> ${savedAdmission.applicationNumber}</p>
                     <p><strong>Email:</strong> ${req.body.email}</p>
-                    <p><strong>Uploaded file:</strong> ${req.file.originalname}</p>
+                    <p><strong>Phone:</strong> ${req.body.phone || 'N/A'}</p>
+                    <p><strong>Applying for:</strong> ${req.body.applyingFor}</p>
+                    <p><strong>Uploaded files:</strong></p>
+                    <ul>${fileList}</ul>
                 </div>
-                <p>The uploaded file is attached to this email.</p>
+                <p>All uploaded files are attached to this email.</p>
             `);
+            
+            const attachments = req.files.map(file => ({
+                filename: file.originalname || 'attachment',
+                content: file.buffer,
+                contentType: file.mimetype
+            }));
+            
             await sendEmailAsync(
                 schoolInbox,
-                `New Application Attachment - ${savedAdmission.applicationNumber}`,
+                `New Application with ${req.files.length} Attachment(s) - ${savedAdmission.applicationNumber}`,
                 notifyHtml,
-                {
-                    attachments: [
-                        {
-                            filename: req.file.originalname || 'attachment',
-                            content: req.file.buffer,
-                            contentType: req.file.mimetype
-                        }
-                    ]
-                }
+                { attachments }
             );
         }
 
