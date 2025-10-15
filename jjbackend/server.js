@@ -130,6 +130,49 @@ app.post('/test-email', async (req, res) => {
     }
 });
 
+// Test attachment email endpoint - sends email with sample attachment
+app.post('/test-attachment-email', async (req, res) => {
+    try {
+        const { sendEmailAsync } = require('./modules/mailer');
+        const testEmail = req.body.to || process.env.GMAIL_SENDER || 'jandjschool.developer@gmail.com';
+        const ok = await verifyTransporter();
+        if (!ok) {
+            return res.status(500).json({ 
+                ok: false, 
+                message: 'Email transport verification failed', 
+                info: getMailerInfo() 
+            });
+        }
+        
+        // Create a simple test attachment
+        const testContent = 'This is a test attachment file.\nSent at: ' + new Date().toISOString();
+        const sent = await sendEmailAsync(
+            testEmail,
+            'Test Attachment Email from J & J School API',
+            `<h3>Test Attachment Email</h3>
+             <p>This email includes a test attachment.</p>
+             <p>Sent at: ${new Date().toISOString()}</p>`,
+            {
+                attachments: [
+                    {
+                        filename: 'test-attachment.txt',
+                        content: Buffer.from(testContent, 'utf8'),
+                        contentType: 'text/plain'
+                    }
+                ]
+            }
+        );
+        res.status(sent ? 200 : 500).json({ 
+            ok: sent, 
+            message: sent ? 'Test email with attachment sent successfully' : 'Failed to send test email',
+            to: testEmail,
+            info: getMailerInfo()
+        });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
 // Admin seed status (diagnostic)
 app.get('/admin-seed-status', async (req, res) => {
     try {
