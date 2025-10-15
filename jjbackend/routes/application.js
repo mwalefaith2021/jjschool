@@ -5,6 +5,11 @@ const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
 const { sendEmailAsync, verifyTransporter, createEmailTemplate } = require('../modules/mailer');
+const multer = require('multer');
+const upload = multer({ 
+    storage: multer.memoryStorage(), 
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB per file
+});
 
 // Validation middleware for admission form
 const validateAdmission = [
@@ -26,7 +31,7 @@ const validateAdmission = [
 ];
 
 // POST route to handle application form submission
-router.post('/submit-application', validateAdmission, async (req, res) => {
+router.post('/submit-application', upload.array('attachments', 5), validateAdmission, async (req, res) => {
     try {
         // Check for validation errors
         const errors = validationResult(req);
@@ -73,7 +78,7 @@ router.post('/submit-application', validateAdmission, async (req, res) => {
             }
         });
 
-        const savedAdmission = await newAdmission.save();
+    const savedAdmission = await newAdmission.save();
 
         // Send confirmation email to applicant with enhanced template
         const emailContent = `
@@ -96,6 +101,39 @@ router.post('/submit-application', validateAdmission, async (req, res) => {
             `Application Received - ${savedAdmission.applicationNumber}`,
             createEmailTemplate(emailContent)
         );
+
+        // If attachments were uploaded, forward them to the school inbox with a short notice
+        if (req.files && req.files.length > 0) {
+            const schoolInbox = process.env.GMAIL_SENDER || 'jandjschool.developer@gmail.com';
+            const fileList = req.files.map(f => `<li>${f.originalname} (${(f.size / 1024).toFixed(2)} KB)</li>`).join('');
+            const notifyHtml = createEmailTemplate(`
+                <h2>New Application Submitted</h2>
+                <p>An applicant has uploaded ${req.files.length} document(s) with their application.</p>
+                <div class="highlight">
+                    <p><strong>Applicant:</strong> ${req.body.firstName} ${req.body.lastName}</p>
+                    <p><strong>Application Number:</strong> ${savedAdmission.applicationNumber}</p>
+                    <p><strong>Email:</strong> ${req.body.email}</p>
+                    <p><strong>Phone:</strong> ${req.body.phone || 'N/A'}</p>
+                    <p><strong>Applying for:</strong> ${req.body.applyingFor}</p>
+                    <p><strong>Uploaded files:</strong></p>
+                    <ul>${fileList}</ul>
+                </div>
+                <p>All uploaded files are attached to this email.</p>
+            `);
+            
+            const attachments = req.files.map(file => ({
+                filename: file.originalname || 'attachment',
+                content: file.buffer,
+                contentType: file.mimetype
+            }));
+            
+            await sendEmailAsync(
+                schoolInbox,
+                `New Application with ${req.files.length} Attachment(s) - ${savedAdmission.applicationNumber}`,
+                notifyHtml,
+                { attachments }
+            );
+        }
 
         res.status(201).json({ 
             message: 'Application submitted successfully!',
@@ -217,11 +255,6 @@ router.put('/applications/:id/status', async (req, res) => {
                 </div>
                 <h3>Your Login Credentials</h3>
                 <p>Your student portal account is being prepared. You will receive your final login credentials once the administrator completes the account setup process.</p>
-                <div class="highlight">
-                    <p><strong>Temporary OTP (for verification):</strong> <span style="font-size: 1.4em; font-weight: bold; color: #2d5016;">${otp}</span></p>
-                    <p><strong>Valid for:</strong> 30 minutes</p>
-                    <p><strong>Suggested Username:</strong> ${desiredUsername}</p>
-                </div>
                 <p><strong>What happens next?</strong></p>
                 <ul>
                     <li>Our administrator will finalize your account setup</li>

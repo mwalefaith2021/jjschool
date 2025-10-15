@@ -99,27 +99,6 @@ app.get('/email-health', async (req, res) => {
     }
 });
 
-// Email diagnostics endpoint - checks raw TCP connectivity to Gmail SMTP
-app.get('/email-diagnostics', async (req, res) => {
-    try {
-        const { diagnoseNetwork } = require('./modules/mailer');
-        const diag = await diagnoseNetwork();
-        const guidance = [];
-        if (diag.results.every(r => !r.ok)) {
-            guidance.push('Outbound SMTP to smtp.gmail.com appears blocked from this host.');
-            guidance.push('Try switching to port 587 with STARTTLS (GMAIL_SMTP_PORT=587, GMAIL_SMTP_SECURE=false).');
-            guidance.push('If still blocked, your hosting plan may restrict SMTP; contact your provider to enable egress.');
-        } else if (diag.results.find(r => r.port === 465 && r.ok) && diag.results.find(r => r.port === 587 && !r.ok)) {
-            guidance.push('Port 465 (SSL) reachable; prefer GMAIL_SMTP_PORT=465, GMAIL_SMTP_SECURE=true.');
-        } else if (diag.results.find(r => r.port === 587 && r.ok) && diag.results.find(r => r.port === 465 && !r.ok)) {
-            guidance.push('Port 587 (STARTTLS) reachable; prefer GMAIL_SMTP_PORT=587, GMAIL_SMTP_SECURE=false.');
-        }
-        res.status(200).json({ ok: true, diag, guidance });
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
-
 // Test email endpoint - sends a real test email
 app.post('/test-email', async (req, res) => {
     try {
@@ -143,6 +122,49 @@ app.post('/test-email', async (req, res) => {
         res.status(sent ? 200 : 500).json({ 
             ok: sent, 
             message: sent ? 'Test email sent successfully' : 'Failed to send test email',
+            to: testEmail,
+            info: getMailerInfo()
+        });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+// Test attachment email endpoint - sends email with sample attachment
+app.post('/test-attachment-email', async (req, res) => {
+    try {
+        const { sendEmailAsync } = require('./modules/mailer');
+        const testEmail = req.body.to || process.env.GMAIL_SENDER || 'jandjschool.developer@gmail.com';
+        const ok = await verifyTransporter();
+        if (!ok) {
+            return res.status(500).json({ 
+                ok: false, 
+                message: 'Email transport verification failed', 
+                info: getMailerInfo() 
+            });
+        }
+        
+        // Create a simple test attachment
+        const testContent = 'This is a test attachment file.\nSent at: ' + new Date().toISOString();
+        const sent = await sendEmailAsync(
+            testEmail,
+            'Test Attachment Email from J & J School API',
+            `<h3>Test Attachment Email</h3>
+             <p>This email includes a test attachment.</p>
+             <p>Sent at: ${new Date().toISOString()}</p>`,
+            {
+                attachments: [
+                    {
+                        filename: 'test-attachment.txt',
+                        content: Buffer.from(testContent, 'utf8'),
+                        contentType: 'text/plain'
+                    }
+                ]
+            }
+        );
+        res.status(sent ? 200 : 500).json({ 
+            ok: sent, 
+            message: sent ? 'Test email with attachment sent successfully' : 'Failed to send test email',
             to: testEmail,
             info: getMailerInfo()
         });

@@ -69,28 +69,8 @@ function handleAdmissionFormSubmit(event) {
     const form = event.target;
     const formData = new FormData(form);
     
-    // Convert FormData to JSON object
-    const applicationData = {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        gender: formData.get('gender'),
-        nationality: formData.get('nationality'),
-        address: formData.get('address'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        applyingFor: formData.get('applyingFor'),
-        academicYear: formData.get('academicYear'),
-        previousSchool: formData.get('previousSchool'),
-        guardianName: formData.get('guardianName'),
-        relationship: formData.get('relationship'),
-        guardianPhone: formData.get('guardianPhone'),
-        guardianEmail: formData.get('guardianEmail'),
-        allergies: formData.get('allergies'),
-        emergencyContact: formData.get('emergencyContact'),
-        paymentMethod: formData.getAll('paymentMethod'),
-        reference: formData.get('reference')
-    };
+    // Do NOT convert to JSON - keep as FormData to support file upload
+    // FormData will automatically handle multipart/form-data encoding
     
     // Show loading state
     const submitBtn = form.querySelector('.submit-btn');
@@ -101,13 +81,11 @@ function handleAdmissionFormSubmit(event) {
     statusDiv.textContent = 'Submitting your application...';
     statusDiv.style.color = '#007bff';
     
-    // Send data to backend API
+    // Send FormData directly to backend API (supports file upload)
     fetch(`${API_BASE}/api/submit-application`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(applicationData)
+        body: formData  // Send FormData directly, DO NOT set Content-Type header
+        // Browser will automatically set Content-Type: multipart/form-data with boundary
     })
     .then(response => {
         if (!response.ok) {
@@ -163,6 +141,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const admissionForm = document.getElementById('admissionForm');
     if (admissionForm) {
         admissionForm.addEventListener('submit', handleAdmissionFormSubmit);
+        
+        // Setup multiple file upload functionality
+        setupMultipleFileUpload();
     }
     
     // Check if this is admin dashboard page
@@ -173,3 +154,94 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+/**
+ * Sets up the dynamic multiple file upload interface
+ */
+function setupMultipleFileUpload() {
+    const container = document.getElementById('file-upload-container');
+    const addMoreBtn = document.getElementById('add-more-files-btn');
+    const fileList = document.getElementById('file-list');
+    const maxFiles = 5;
+    
+    if (!container || !addMoreBtn) return;
+    
+    // Update file list display
+    function updateFileList() {
+        const fileInputs = container.querySelectorAll('.file-input');
+        const files = [];
+        
+        fileInputs.forEach(input => {
+            if (input.files && input.files.length > 0) {
+                files.push({
+                    name: input.files[0].name,
+                    size: (input.files[0].size / 1024).toFixed(2)
+                });
+            }
+        });
+        
+        if (files.length > 0) {
+            fileList.innerHTML = '<strong>Selected files:</strong><br>' + 
+                files.map(f => `📎 ${f.name} (${f.size} KB)`).join('<br>');
+            fileList.style.display = 'block';
+        } else {
+            fileList.style.display = 'none';
+        }
+        
+        // Update add button visibility
+        const currentCount = container.querySelectorAll('.file-input-wrapper').length;
+        addMoreBtn.style.display = currentCount >= maxFiles ? 'none' : 'inline-block';
+    }
+    
+    // Add new file input
+    addMoreBtn.addEventListener('click', function() {
+        const currentCount = container.querySelectorAll('.file-input-wrapper').length;
+        
+        if (currentCount >= maxFiles) {
+            alert(`Maximum ${maxFiles} files allowed.`);
+            return;
+        }
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'file-input-wrapper';
+        wrapper.innerHTML = `
+            <input type="file" name="attachments" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            <button type="button" class="remove-file-btn">✕ Remove</button>
+        `;
+        
+        const removeBtn = wrapper.querySelector('.remove-file-btn');
+        const fileInput = wrapper.querySelector('.file-input');
+        
+        // Remove button handler
+        removeBtn.addEventListener('click', function() {
+            wrapper.remove();
+            updateFileList();
+            
+            // Make sure at least one input remains and is required
+            const remaining = container.querySelectorAll('.file-input-wrapper');
+            if (remaining.length === 1) {
+                remaining[0].querySelector('.remove-file-btn').style.display = 'none';
+                remaining[0].querySelector('.file-input').required = true;
+            }
+        });
+        
+        // File change handler
+        fileInput.addEventListener('change', updateFileList);
+        
+        container.appendChild(wrapper);
+        updateFileList();
+        
+        // Show remove button on first input if we now have multiple
+        const allWrappers = container.querySelectorAll('.file-input-wrapper');
+        if (allWrappers.length > 1) {
+            allWrappers[0].querySelector('.remove-file-btn').style.display = 'inline-block';
+            allWrappers[0].querySelector('.file-input').required = false;
+        }
+    });
+    
+    // Setup change listener on initial file input
+    const initialInput = container.querySelector('.file-input');
+    if (initialInput) {
+        initialInput.addEventListener('change', updateFileList);
+    }
+}
