@@ -248,10 +248,10 @@ body {
 }
 
 .header-logo-image {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
     background: var(--color-surface);
-    border: 1px rgba(7, 63, 25, 0.9);
+    border: 1px solid rgba(244, 246, 241, 0.8);
     border-radius: 50%;
     display: flex;
     justify-content: center;
