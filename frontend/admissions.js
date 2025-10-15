@@ -69,28 +69,8 @@ function handleAdmissionFormSubmit(event) {
     const form = event.target;
     const formData = new FormData(form);
     
-    // Convert FormData to JSON object
-    const applicationData = {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        gender: formData.get('gender'),
-        nationality: formData.get('nationality'),
-        address: formData.get('address'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        applyingFor: formData.get('applyingFor'),
-        academicYear: formData.get('academicYear'),
-        previousSchool: formData.get('previousSchool'),
-        guardianName: formData.get('guardianName'),
-        relationship: formData.get('relationship'),
-        guardianPhone: formData.get('guardianPhone'),
-        guardianEmail: formData.get('guardianEmail'),
-        allergies: formData.get('allergies'),
-        emergencyContact: formData.get('emergencyContact'),
-        paymentMethod: formData.getAll('paymentMethod'),
-        reference: formData.get('reference')
-    };
+    // Do NOT convert to JSON - keep as FormData to support file upload
+    // FormData will automatically handle multipart/form-data encoding
     
     // Show loading state
     const submitBtn = form.querySelector('.submit-btn');
@@ -101,13 +81,11 @@ function handleAdmissionFormSubmit(event) {
     statusDiv.textContent = 'Submitting your application...';
     statusDiv.style.color = '#007bff';
     
-    // Send data to backend API
+    // Send FormData directly to backend API (supports file upload)
     fetch(`${API_BASE}/api/submit-application`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(applicationData)
+        body: formData  // Send FormData directly, DO NOT set Content-Type header
+        // Browser will automatically set Content-Type: multipart/form-data with boundary
     })
     .then(response => {
         if (!response.ok) {
