@@ -1,191 +1,66 @@
-const nodemailer = require('nodemailer');
-const net = require('net');
+const { google } = require('googleapis');
+const GmailScopes = ['https://www.googleapis.com/auth/gmail.send','https://www.googleapis.com/auth/gmail.readonly'];
 
-// Create a reusable transporter with flexible configuration
-// Priority: SMTP_URL > SMTP_HOST/PARTIAL > Gmail service via EMAIL_USER/EMAIL_PASS
-let transporter;
+let oauth2Client = null;
 let configured = false;
 let mailerInfo = {
   configured: false,
-  method: 'none',
+  method: 'GMAIL_API',
   from: null,
-  host: null,
-  port: null,
-  secure: null,
   lastError: null,
   lastVerifiedAt: null,
-  fallbackTried: false,
+  tokenExpiresAt: null,
 };
 
-function buildTransporter() {
-  try {
-    console.log('🔧 Building email transporter...');
-    if (process.env.SMTP_URL) {
-      transporter = nodemailer.createTransport(process.env.SMTP_URL);
-      configured = true;
-      mailerInfo.method = 'SMTP_URL';
-      console.log('✅ Transporter configured via SMTP_URL');
-      return;
-    }
-    if (process.env.SMTP_HOST) {
-      transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT || 587),
-        secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
-        auth: (process.env.SMTP_USER && process.env.SMTP_PASS) ? {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        } : undefined
-      });
-      configured = true;
-      mailerInfo.method = 'SMTP_HOST';
-      mailerInfo.host = process.env.SMTP_HOST;
-      mailerInfo.port = Number(process.env.SMTP_PORT || 587);
-      mailerInfo.secure = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
-      console.log(`✅ Transporter configured via SMTP_HOST: ${process.env.SMTP_HOST}`);
-      return;
-    }
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      // Normalize Gmail App Password (Google shows it with spaces; remove them)
-      const normalizedPass = String(process.env.EMAIL_PASS).replace(/\s+/g, '');
-      console.log(`🔐 Gmail credentials found for: ${process.env.EMAIL_USER}`);
-      console.log(`🔑 App password length (after normalize): ${normalizedPass.length} chars`);
-      
-      // Gmail with App Password - explicit SMTP configuration
-      const gmailPort = Number(process.env.GMAIL_SMTP_PORT || 465); // 465 (SSL) preferred; 587 (STARTTLS) alternative
-      const gmailSecure = String(process.env.GMAIL_SMTP_SECURE || (gmailPort === 465 ? 'true' : 'false')).toLowerCase() === 'true';
+function initGmailClient() {
+  const { GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, GMAIL_SENDER } = process.env;
+  if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET || !GMAIL_REFRESH_TOKEN || !GMAIL_SENDER) {
+    console.warn('⚠️ Missing Gmail API env vars (GMAIL_CLIENT_ID/GMAIL_CLIENT_SECRET/GMAIL_REFRESH_TOKEN/GMAIL_SENDER). Email disabled.');
+    configured = false;
+    mailerInfo.configured = false;
+    return;
+  }
+  oauth2Client = new google.auth.OAuth2(GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET);
+  oauth2Client.setCredentials({ refresh_token: GMAIL_REFRESH_TOKEN });
+  configured = true;
+  mailerInfo.configured = true;
+  mailerInfo.from = GMAIL_SENDER;
+  console.log('✅ Gmail API mailer initialized (OAuth2)');
+}
 
-      transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: gmailPort,
-        secure: gmailSecure, // true for 465, false for 587
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: normalizedPass
-        },
-        pool: true,
-        maxConnections: 5,
-        maxMessages: 100,
-        rateDelta: 1000,
-        rateLimit: 5,
-        // Timeouts to fail fast on blocked egress
-        connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT || 15000),
-        greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 10000),
-        socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 20000),
-        tls: {
-          // Ensure correct SNI and allow modern TLS
-          servername: 'smtp.gmail.com'
-        }
-      });
-      configured = true;
-      mailerInfo.method = 'GMAIL_SERVICE';
-      mailerInfo.from = process.env.EMAIL_USER;
-      console.log('✅ Transporter configured via Gmail service');
-      console.log(`📧 Default sender: ${process.env.EMAIL_USER}`);
-      return;
+initGmailClient();
+
+async function getAccessToken() {
+  if (!oauth2Client) return null;
+  try {
+    const { token, res } = await oauth2Client.getAccessToken();
+    if (res?.data?.expires_in) {
+      mailerInfo.tokenExpiresAt = new Date(Date.now() + (res.data.expires_in * 1000)).toISOString();
     }
-    console.warn('⚠️ No email credentials found in environment');
-    configured = false;
-    mailerInfo.method = 'none';
+    return token;
   } catch (e) {
-    console.error('❌ Mailer setup error:', e.message);
-    configured = false;
-    mailerInfo.method = 'error';
     mailerInfo.lastError = e.message;
+    console.error('❌ Failed to obtain Gmail access token:', e.message);
+    return null;
   }
 }
 
-buildTransporter();
-
-async function verifyTransporter() {
-  if (!transporter) {
-    console.warn('⚠️ No transporter configured for verification');
-    return false;
-  }
+async function verifyTransporter() { // name retained for compatibility
+  if (!configured) return false;
   try {
-    console.log('🔍 Verifying email transporter...');
-    await transporter.verify();
-    console.log('✅ Email transporter verified successfully');
-    mailerInfo.lastError = null;
+    console.log('🔍 Verifying Gmail API credentials...');
+    const token = await getAccessToken();
+    if (!token) return false;
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const profile = await gmail.users.getProfile({ userId: 'me' });
     mailerInfo.lastVerifiedAt = new Date().toISOString();
+    mailerInfo.lastError = null;
+    mailerInfo.from = process.env.GMAIL_SENDER || profile.data.emailAddress || mailerInfo.from;
+    console.log('✅ Gmail API verified for:', profile.data.emailAddress);
     return true;
   } catch (e) {
-    const errorMsg = e && e.message ? e.message : String(e);
-    console.warn('❌ Mailer verify failed:', errorMsg);
-    mailerInfo.lastError = errorMsg;
-    // If Gmail is configured and verify timed out, try fallback port (465 <-> 587) once
-    try {
-      const isGmail = mailerInfo.method === 'GMAIL_SERVICE' || (transporter?.options?.host === 'smtp.gmail.com');
-      if (isGmail && /timed?\s*out/i.test(errorMsg)) {
-        const currentPort = transporter.options.port;
-        const fallbackPort = currentPort === 465 ? 587 : 465;
-        const fallbackSecure = fallbackPort === 465;
-        console.warn(`🔁 Gmail verify timeout on port ${currentPort}. Retrying with port ${fallbackPort} (secure=${fallbackSecure})...`);
-        transporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: fallbackPort,
-          secure: fallbackSecure,
-          auth: transporter.options.auth,
-          pool: transporter.options.pool,
-          maxConnections: transporter.options.maxConnections,
-          maxMessages: transporter.options.maxMessages,
-          rateDelta: transporter.options.rateDelta,
-          rateLimit: transporter.options.rateLimit,
-          connectionTimeout: transporter.options.connectionTimeout,
-          greetingTimeout: transporter.options.greetingTimeout,
-          socketTimeout: transporter.options.socketTimeout,
-          tls: { servername: 'smtp.gmail.com' }
-        });
-        await transporter.verify();
-        console.log('✅ Email transporter verified successfully on fallback port', fallbackPort);
-        mailerInfo.lastError = null;
-        mailerInfo.lastVerifiedAt = new Date().toISOString();
-        return true;
-      }
-      // If both Gmail ports fail and fallback SMTP is defined (e.g., SMTP2GO on port 2525), try it once.
-      if (/timed?\s*out/i.test(errorMsg) && !mailerInfo.fallbackTried && process.env.FALLBACK_SMTP_HOST) {
-        console.warn('🛟 Primary SMTP timed out. Attempting fallback SMTP host:', process.env.FALLBACK_SMTP_HOST);
-        mailerInfo.fallbackTried = true;
-        const fh = process.env.FALLBACK_SMTP_HOST;
-        const fp = Number(process.env.FALLBACK_SMTP_PORT || 2525);
-        const fs = String(process.env.FALLBACK_SMTP_SECURE || 'false').toLowerCase() === 'true';
-        transporter = nodemailer.createTransport({
-          host: fh,
-          port: fp,
-            secure: fs,
-            auth: (process.env.FALLBACK_SMTP_USER && process.env.FALLBACK_SMTP_PASS) ? {
-              user: process.env.FALLBACK_SMTP_USER,
-              pass: process.env.FALLBACK_SMTP_PASS
-            } : undefined,
-            pool: true,
-            maxConnections: 5,
-            maxMessages: 100,
-            rateDelta: 1000,
-            rateLimit: 5,
-            connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT || 15000),
-            greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 10000),
-            socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 20000)
-        });
-        try {
-          await transporter.verify();
-          mailerInfo.method = 'FALLBACK_SMTP';
-          mailerInfo.host = fh;
-          mailerInfo.port = fp;
-          mailerInfo.secure = fs;
-          mailerInfo.from = process.env.MAIL_FROM || process.env.FALLBACK_SMTP_FROM || mailerInfo.from;
-          console.log('✅ Fallback SMTP transporter verified successfully');
-          mailerInfo.lastError = null;
-          mailerInfo.lastVerifiedAt = new Date().toISOString();
-          return true;
-        } catch (fallbackVerifyErr) {
-          console.warn('❌ Fallback SMTP verify failed:', fallbackVerifyErr?.message || String(fallbackVerifyErr));
-          mailerInfo.lastError = fallbackVerifyErr?.message || String(fallbackVerifyErr);
-        }
-      }
-    } catch (fallbackErr) {
-      console.warn('❌ Fallback verify failed:', fallbackErr?.message || String(fallbackErr));
-      mailerInfo.lastError = fallbackErr?.message || String(fallbackErr);
-    }
+    mailerInfo.lastError = e.message;
+    console.error('❌ Gmail API verify failed:', e.message);
     return false;
   }
 }
@@ -226,98 +101,72 @@ function createEmailTemplate(content, title = 'J & J Secondary School') {
   `.trim();
 }
 
-// Fire-and-forget email sender with retry logic. Logs failures but never throws to callers.
+// Build raw RFC 2822 email and send through Gmail API
+function buildMime({ from, to, subject, html, text }) {
+  const boundary = '----=_Part_JJSchool_' + Date.now();
+  const safeSubject = subject.replace(/\r|\n/g, ' ').trim();
+  const plain = (text || html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g,' ')).trim();
+  return [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${safeSubject}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 7bit',
+    '',
+    plain,
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: 7bit',
+    '',
+    html,
+    `--${boundary}--`,
+    ''
+  ].join('\r\n');
+}
+
+function base64UrlEncode(str) {
+  return Buffer.from(str).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
 async function sendEmailAsync(to, subject, html, options = {}) {
-  if (!configured || !transporter) {
-    console.warn('⚠️ Email not configured; skipping email to', to);
-    return Promise.resolve(false);
+  if (!configured) {
+    console.warn('⚠️ Gmail API not configured; skipping email to', to);
+    return false;
   }
-
-  // Validate recipient email
   if (!to || typeof to !== 'string' || !to.includes('@')) {
-    console.error('❌ Invalid recipient email address:', to);
-    return Promise.resolve(false);
+    console.error('❌ Invalid recipient email:', to);
+    return false;
   }
-
-  // Determine a safe 'from' address. Prefer explicit option, then MAIL_FROM,
-  // then the authenticated user on the transport. Avoid constructing
-  // "<undefined>" which causes SMTP rejections.
-  const transportAuthUser = (transporter && transporter.options && transporter.options.auth && transporter.options.auth.user) || process.env.EMAIL_USER || process.env.SMTP_USER;
-  const computedFrom = options.from 
-    || process.env.MAIL_FROM 
-    || (transportAuthUser ? `"J & J Secondary School" <${transportAuthUser}>` : undefined);
-  if (!computedFrom) {
-    console.error('❌ No valid FROM address could be determined. Set MAIL_FROM or EMAIL_USER/SMTP_USER.');
-    return Promise.resolve(false);
-  }
-  const from = computedFrom;
-  mailerInfo.from = from;
-  
-  // Proactively verify the transporter if we haven't done so or last verify failed
   if (!mailerInfo.lastVerifiedAt || mailerInfo.lastError) {
     const ok = await verifyTransporter();
     if (!ok) {
-      console.error('❌ Email transport not ready; aborting send. Last error:', mailerInfo.lastError);
+      console.error('❌ Gmail API not verified; aborting send. Last error:', mailerInfo.lastError);
       return false;
     }
   }
-  
-  const mailOptions = { 
-    from, 
-    to: to.trim(), 
-    subject, 
-    html,
-    // Add text alternative for better deliverability
-    text: html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ')
-  };
-  
-  console.log('📧 Attempting to send email:', { 
-    to: to.trim(), 
-    subject, 
-    from, 
-    via: mailerInfo.method 
-  });
-
-  // Retry logic: try up to 2 times
-  const maxRetries = 2;
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const info = await transporter.sendMail(mailOptions);
-      console.log(`✅ Email sent successfully (attempt ${attempt}/${maxRetries}):`, { 
-        to: to.trim(), 
-        messageId: info.messageId,
-        response: info.response 
-      });
-      mailerInfo.lastError = null; // Clear any previous errors
-      return true;
-    } catch (err) {
-      const errorMsg = err && err.message ? err.message : String(err);
-      console.error(`❌ Email send error (attempt ${attempt}/${maxRetries}):`, {
-        to: to.trim(),
-        error: errorMsg,
-        code: err.code,
-        command: err.command
-      });
-      mailerInfo.lastError = errorMsg;
-      
-      // Don't retry on authentication or configuration errors
-      if (errorMsg.includes('Invalid login') || 
-          errorMsg.includes('Username and Password not accepted') ||
-          errorMsg.includes('AUTH') ||
-          errorMsg.includes('Bad sender address syntax') ||
-          errorMsg.includes('Sender address rejected')) {
-        console.error('🚫 Authentication error - stopping retry attempts');
-        return false;
-      }
-      
-      // Wait before retry (except on last attempt)
-      if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-      }
-    }
+  const from = options.from || process.env.GMAIL_SENDER || mailerInfo.from;
+  if (!from) {
+    console.error('❌ No FROM address (set GMAIL_SENDER).');
+    return false;
   }
-  
-  return false;
+  mailerInfo.from = from;
+  console.log('📧 (Gmail API) Sending email:', { to: to.trim(), subject, from });
+  try {
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const raw = base64UrlEncode(buildMime({ from, to: to.trim(), subject, html }));
+    const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+    console.log('✅ Gmail API email sent:', { id: res.data.id, threadId: res.data.threadId });
+    mailerInfo.lastError = null;
+    return true;
+  } catch (e) {
+    mailerInfo.lastError = e.message;
+    console.error('❌ Gmail API send failed:', e.message);
+    return false;
+  }
 }
 
 module.exports = {
@@ -325,44 +174,4 @@ module.exports = {
   verifyTransporter,
   getMailerInfo: () => ({ ...mailerInfo, configured }),
   createEmailTemplate,
-  // Quick TCP connectivity check to Gmail SMTP ports to diagnose host-level egress blocks
-  diagnoseNetwork: async () => {
-    const host = 'smtp.gmail.com';
-    const ports = [465, 587];
-    const results = [];
-    for (const port of ports) {
-      results.push(await new Promise((resolve) => {
-        const start = Date.now();
-        const socket = new net.Socket();
-        const timeoutMs = Number(process.env.SMTP_DIAG_TIMEOUT || 5000);
-        let outcome = { host, port, ok: false, ms: 0, error: null };
-        socket.setTimeout(timeoutMs);
-        socket.once('connect', () => {
-          outcome.ok = true;
-          outcome.ms = Date.now() - start;
-          socket.destroy();
-          resolve(outcome);
-        });
-        socket.once('timeout', () => {
-          outcome.error = 'timeout';
-          outcome.ms = Date.now() - start;
-          socket.destroy();
-          resolve(outcome);
-        });
-        socket.once('error', (err) => {
-          outcome.error = err && err.message ? err.message : String(err);
-          outcome.ms = Date.now() - start;
-          resolve(outcome);
-        });
-        try {
-          socket.connect(port, host);
-        } catch (e) {
-          outcome.error = e.message;
-          outcome.ms = Date.now() - start;
-          resolve(outcome);
-        }
-      }));
-    }
-    return { host, results };
-  },
 };
