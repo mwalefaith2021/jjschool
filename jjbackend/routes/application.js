@@ -228,7 +228,7 @@ router.put('/applications/:id/status', async (req, res) => {
             });
         }
     // Notify applicant depending on status (non-blocking)
-        /*if (status === 'accepted') {
+        if (status === 'accepted') {
             // Create PendingSignup entry
             const desiredUsername = `${application.personalInfo.firstName}.${application.personalInfo.lastName}`.toLowerCase();
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -242,26 +242,8 @@ router.put('/applications/:id/status', async (req, res) => {
                 otp,
                 otpExpiresAt: expires,
                 status: 'pending'
-            });*/
-            if (!existingSignup) {
-            // 2. ONLY create a new PendingSignup if one doesn't exist
-            const desiredUsername = `${application.personalInfo.firstName}.${application.personalInfo.lastName}`.toLowerCase();
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
-
-            await PendingSignup.create({
-                applicationId: application._id,
-                email: application.contactInfo.email,
-                fullName: `${application.personalInfo.firstName} ${application.personalInfo.lastName}`,
-                desiredUsername,
-                otp,
-                otpExpiresAt: expires,
-                status: 'pending'
             });
-        } else {
-            // Optional: Log a message if the entry already exists
-            console.log(`Application ${application._id} already has a PendingSignup record. Skipping creation.`);
-        }
+            
 
             const acceptedEmailContent = `
                 <h2>🎉 Congratulations! Your Application Has Been Approved</h2>
