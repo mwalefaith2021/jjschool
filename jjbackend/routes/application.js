@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/auth');
+
+// Protect all application routes (admin-only)
+router.use(requireAuth);
 const Admission = require('../models/Admission');
 const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');

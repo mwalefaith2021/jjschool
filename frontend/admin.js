@@ -90,6 +90,25 @@ window.addEventListener('pageshow', function(event) {
     }
 });
 
+// Strengthen back-button protection by using history API and popstate
+if (window.history && window.history.pushState) {
+    try {
+        window.history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // If logged out, ensure user cannot return to this page
+                window.location.replace('login.html');
+            } else {
+                // Otherwise, reload to ensure fresh auth checks
+                window.location.reload();
+            }
+        });
+    } catch (e) {
+        // ignore if browser blocks pushState
+    }
+}
+
 // Check session on page visibility change
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden && !window.location.pathname.includes('login.html')) {

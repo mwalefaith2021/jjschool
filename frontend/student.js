@@ -105,6 +105,21 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
+// Strengthen back-button protection using history API and popstate
+if (window.history && window.history.pushState) {
+    try {
+        window.history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.replace('login.html');
+            } else {
+                window.location.reload();
+            }
+        });
+    } catch (e) {}
+}
+
 // Authentication check
 async function checkAuth() {
     // Only check auth on dashboard pages, not on login page

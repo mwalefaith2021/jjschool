@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/auth');
+
+// Fees management endpoints should be protected
+router.use(requireAuth);
 const mongoose = require('mongoose');
 
 // Define Fee Schema

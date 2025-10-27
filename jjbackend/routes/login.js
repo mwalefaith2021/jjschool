@@ -136,9 +136,19 @@ router.post('/register', validateRegister, async (req, res) => {
     }
 });
 
-// POST route for logout (optional - mainly for client-side token removal)
+// POST route for logout (client should remove stored token). Also set no-cache headers so logged-out pages won't be cached.
+const { noCache } = require('../middleware/auth');
 router.post('/logout', (req, res) => {
-    res.status(200).json({ message: 'Logout successful!' });
+    // Try to clear any session cookie (if present); this project uses JWTs but clear cookie if set
+    try {
+        res.clearCookie && res.clearCookie('connect.sid', { path: '/' });
+    } catch (e) {}
+
+    // Ensure responses are not cached
+    noCache(req, res, () => {});
+
+    // Inform client to remove token from storage. The server cannot "destroy" a JWT unless a blacklist is used.
+    res.status(200).json({ message: 'Logout successful. Please remove token from client storage.' });
 });
 
 // Change password (first-time login flow)

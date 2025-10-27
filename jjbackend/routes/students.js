@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/auth');
+
+// Protect student management endpoints (admin actions require auth)
+router.use(requireAuth);
 const User = require('../models/User');
 const Admission = require('../models/Admission');
 const Payment = require('../models/Payment');

@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/auth');
+
+// Protect payments endpoints: listing and status updates require auth.
+// Creating a payment should also require an authenticated student.
+router.use(requireAuth);
 const Payment = require('../models/Payment');
 const User = require('../models/User');
 

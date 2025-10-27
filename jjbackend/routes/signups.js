@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/auth');
+
+// Approving/rejecting pending signups is an admin action; require auth
+router.use(requireAuth);
 const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');
 const { sendEmailAsync, createEmailTemplate } = require('../modules/mailer');

@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth } = require('../middleware/auth');
+
+// Only admins should be able to reset other users' passwords
+router.use(requireAuth);
 const User = require('../models/User');
 const { sendEmailAsync, createEmailTemplate } = require('../modules/mailer');
 
