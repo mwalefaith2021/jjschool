@@ -85,6 +85,26 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 });
 
+// Prevent back button access after logout
+window.addEventListener('pageshow', function(event) {
+    // Check if page is loaded from cache (back button)
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        // If no valid session, redirect to login
+        const token = localStorage.getItem('token');
+        if (!token && !window.location.pathname.includes('login.html')) {
+            window.location.replace('login.html');
+        }
+    }
+});
+
+// Check session on page visibility change
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && !window.location.pathname.includes('login.html')) {
+        // Page became visible, verify session is still valid
+        checkAuth();
+    }
+});
+
 // Authentication check
 async function checkAuth() {
     // Only check auth on dashboard pages, not on login page
@@ -546,11 +566,23 @@ function showPaymentHistory() {
 function logout() {
     showStudentConfirm('Logout', 'Are you sure you want to logout?').then(ok => {
         if (!ok) return;
+        
+        // Clear all session data
         localStorage.removeItem('userType');
         localStorage.removeItem('username');
         localStorage.removeItem('userProfile');
         localStorage.removeItem('token');
-        window.location.href = 'login.html';
+        
+        // Clear session storage as well
+        sessionStorage.clear();
+        
+        // Redirect and prevent back button access
+        window.location.replace('login.html');
+        
+        // Additional security: reload to ensure clean state
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
     });
 }
 
