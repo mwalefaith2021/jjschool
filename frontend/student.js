@@ -28,7 +28,9 @@ function loginStudentUser(username, password) {
             localStorage.setItem('userType', 'student');
             localStorage.setItem('username', data.user.username);
             localStorage.setItem('userProfile', JSON.stringify(data.user));
-            localStorage.setItem('token', data.token);
+            // Store token centrally and ensure apiFetch will attach it
+            if (window.setAuthToken) window.setAuthToken(data.token);
+            else localStorage.setItem('token', data.token);
 
             // If first login, force password change
             if (data.user.requiresPasswordReset) {
@@ -138,7 +140,7 @@ async function checkAuth() {
     }
     // Verify token with backend
     try {
-        const res = await fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/verify`) : fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } }));
         if (!res.ok) throw new Error('Invalid');
         return true;
     } catch {
@@ -259,9 +261,9 @@ async function fetchAndRenderStudentProfile() {
     try {
         const profile = JSON.parse(localStorage.getItem('userProfile'));
         if (!profile || !profile.id) return;
-        const res = await fetch(`${API_BASE}/api/students/${profile.id}/application`);
-        if (!res.ok) return; // fallback already rendered
-        const { data } = await res.json();
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/students/${profile.id}/application`) : fetch(`${API_BASE}/api/students/${profile.id}/application`));
+    if (!res.ok) return; // fallback already rendered
+    const { data } = await res.json();
         if (!data) return;
         const fullName = `${data.personalInfo.firstName} ${data.personalInfo.lastName}`;
         const dob = data.personalInfo.dateOfBirth ? new Date(data.personalInfo.dateOfBirth).toLocaleDateString() : '-';
@@ -378,7 +380,7 @@ function processPayment() {
     // Send to backend for admin visibility
     const profile = JSON.parse(localStorage.getItem('userProfile'));
     if (profile && profile.id) {
-        fetch(`${API_BASE}/api/payments`, {
+        (window.apiFetch ? window.apiFetch(`${API_BASE}/api/payments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -388,7 +390,17 @@ function processPayment() {
                 method,
                 reference: paymentRef
             })
-        }).catch(() => {});
+        }) : fetch(`${API_BASE}/api/payments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                studentId: profile.id,
+                amount: Number(amount),
+                type,
+                method,
+                reference: paymentRef
+            })
+        })).catch(() => {});
     }
 }
 

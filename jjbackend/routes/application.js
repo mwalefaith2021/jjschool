@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 // Protect all application routes (admin-only)
 router.use(requireAuth);
 const Admission = require('../models/Admission');
+const { requireAuth } = require('../middleware/auth');
 const PendingSignup = require('../models/PendingSignup');
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
@@ -159,7 +160,7 @@ router.post('/submit-application', upload.array('attachments', 5), validateAdmis
 });
 
 // GET route to fetch all applications (for admin)
-router.get('/applications', async (req, res) => {
+router.get('/applications', requireAuth, async (req, res) => {
     try {
         const applications = await Admission.find()
             .sort({ dateSubmitted: -1 })
@@ -180,7 +181,7 @@ router.get('/applications', async (req, res) => {
 });
 
 // GET route to fetch a specific application by ID
-router.get('/applications/:id', async (req, res) => {
+router.get('/applications/:id', requireAuth, async (req, res) => {
     try {
         const application = await Admission.findById(req.params.id);
         
@@ -204,7 +205,7 @@ router.get('/applications/:id', async (req, res) => {
 });
 
 // PUT route to update application status (for admin)
-router.put('/applications/:id/status', async (req, res) => {
+router.put('/applications/:id/status', requireAuth, async (req, res) => {
     try {
         const { status, adminNotes, reviewedBy } = req.body;
         
@@ -332,7 +333,7 @@ router.put('/applications/:id/status', async (req, res) => {
 });
 
 // GET route to get application statistics (for admin dashboard)
-router.get('/applications-stats', async (req, res) => {
+router.get('/applications-stats', requireAuth, async (req, res) => {
     try {
         const stats = await Admission.aggregate([
             {

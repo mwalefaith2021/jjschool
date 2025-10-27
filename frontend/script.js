@@ -142,6 +142,36 @@ window.addEventListener('load', function() {
     document.body.classList.add('loaded');
 });
 
+// --- Auth helpers ---
+// Store token and provide a fetch wrapper that attaches the Authorization header
+window.setAuthToken = function(token) {
+    try {
+        if (token) {
+            localStorage.setItem('token', token);
+            // Also keep a memory copy for quick access
+            window.__auth_token = token;
+        }
+    } catch (e) { console.warn('setAuthToken error', e); }
+};
+
+window.clearAuthToken = function() {
+    try {
+        localStorage.removeItem('token');
+        window.__auth_token = null;
+    } catch (e) { console.warn('clearAuthToken error', e); }
+};
+
+window.apiFetch = async function(url, options = {}) {
+    options.headers = options.headers || {};
+    // Attach token from memory or localStorage
+    const token = window.__auth_token || localStorage.getItem('token');
+    if (token) options.headers['Authorization'] = `Bearer ${token}`;
+    // default credentials to include for same-site cookies if needed
+    if (typeof options.credentials === 'undefined') options.credentials = 'include';
+    return fetch(url, options);
+};
+
+
 // Animate numbers or counters if you add them later
 function animateCounters() {
     const counters = document.querySelectorAll('.counter');

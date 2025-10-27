@@ -29,9 +29,7 @@
     const token = localStorage.getItem('token');
     if (!token) return false;
     try {
-      const res = await fetch(`${API_BASE}/api/verify`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/verify`) : fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } }));
       return res.ok;
     } catch { return false; }
   }
@@ -40,6 +38,7 @@
     const { user, token } = await apiLogin(username, password);
     if (!user || !token) throw new Error('Invalid login response');
     setSession(user, token);
+    if (window.setAuthToken) window.setAuthToken(token);
     // Redirect by role (default student)
     if (user.role === 'admin') window.location.href = 'admindashboard.html';
     else window.location.href = 'studentdashboard.html';

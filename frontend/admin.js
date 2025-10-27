@@ -28,7 +28,9 @@ function loginAdminUser(username, password) {
             localStorage.setItem('userType', 'admin');
             localStorage.setItem('username', data.user.username);
             localStorage.setItem('userProfile', JSON.stringify(data.user));
-            localStorage.setItem('token', data.token);
+            // Store token centrally and ensure apiFetch will attach it
+            if (window.setAuthToken) window.setAuthToken(data.token);
+            else localStorage.setItem('token', data.token);
             // Require password reset if flagged
             if (data.user.requiresPasswordReset) {
                 showAdminPasswordResetModal(data.user.id);
@@ -134,9 +136,8 @@ async function checkAuth() {
     }
     // verify token with backend
     try {
-        const res = await fetch(`${API_BASE}/api/verify`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // use apiFetch to attach token automatically
+        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/verify`) : fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } }));
         if (!res.ok) throw new Error('Invalid');
         return true;
     } catch {
@@ -232,7 +233,7 @@ async function displayPendingSignupsFromAPI() {
     if (!signupsList) return;
     signupsList.innerHTML = '<p style="text-align:center;">Loading...</p>';
     try {
-        const res = await fetch(`${API_BASE}/api/pending-signups`);
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/pending-signups`) : fetch(`${API_BASE}/api/pending-signups`));
         if (!res.ok) throw new Error('Failed to fetch signups');
         const { data } = await res.json();
         if (!data.length) {
@@ -263,7 +264,7 @@ async function approveSignup(signupId) {
     try {
         const ok = await showConfirm('Approve Signup', 'Approve this signup and create student user?');
         if (!ok) return;
-        const res = await fetch(`${API_BASE}/api/pending-signups/${signupId}/approve`, { method: 'POST' });
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/pending-signups/${signupId}/approve`, { method: 'POST' }) : fetch(`${API_BASE}/api/pending-signups/${signupId}/approve`, { method: 'POST' }));
         if (!res.ok) throw new Error('Failed to approve signup');
         displayPendingSignupsFromAPI();
     } catch (e) { alert(e.message); }
@@ -274,9 +275,7 @@ async function rejectSignup(signupId) {
     try {
         const reason = await showPrompt('Reject Signup', 'Enter reason for rejection');
         if (!reason) return;
-        const res = await fetch(`${API_BASE}/api/pending-signups/${signupId}/reject`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason })
-        });
+        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/pending-signups/${signupId}/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) }) : fetch(`${API_BASE}/api/pending-signups/${signupId}/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason }) }));
         if (!res.ok) throw new Error('Failed to reject signup');
         displayPendingSignupsFromAPI();
     } catch (e) { alert(e.message); }
@@ -290,7 +289,7 @@ function viewStudent(studentId) {
 // Application management functions
 async function viewApplication(applicationId) {
     try {
-        const res = await fetch(`${API_BASE}/api/applications/${applicationId}`);
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/applications/${applicationId}`) : fetch(`${API_BASE}/api/applications/${applicationId}`));
         if (!res.ok) throw new Error('Failed to load application');
         const { data } = await res.json();
         const modal = document.getElementById('applicationModal');
@@ -370,10 +369,7 @@ async function approveApplication(applicationId) {
         const approveBtn = document.querySelector(`button[onclick="approveApplication('${applicationId}')"]`);
         if (approveBtn) { approveBtn.disabled = true; approveBtn.textContent = 'Approving...'; }
 
-        const res = await fetch(`${API_BASE}/api/applications/${applicationId}/status`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'accepted', adminNotes: 'Approved by admin' })
-        });
+        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/applications/${applicationId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'accepted', adminNotes: 'Approved by admin' }) }) : fetch(`${API_BASE}/api/applications/${applicationId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'accepted', adminNotes: 'Approved by admin' }) }));
         if (!res.ok) throw new Error('Failed to approve');
 
         // Update UI instantly
@@ -398,10 +394,7 @@ async function rejectApplication(applicationId) {
         const rejectBtn = document.querySelector(`button[onclick="rejectApplication('${applicationId}')"]`);
         if (rejectBtn) { rejectBtn.disabled = true; rejectBtn.textContent = 'Rejecting...'; }
 
-        const res = await fetch(`${API_BASE}/api/applications/${applicationId}/status`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'rejected', adminNotes: reason })
-        });
+        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/applications/${applicationId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'rejected', adminNotes: reason }) }) : fetch(`${API_BASE}/api/applications/${applicationId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'rejected', adminNotes: reason }) }));
         if (!res.ok) throw new Error('Failed to reject');
 
         updateApplicationRow(applicationId, 'rejected');
@@ -422,7 +415,7 @@ async function fetchAndRenderApplications() {
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 12px;">Loading...</td></tr>';
     try {
-        const res = await fetch(`${API_BASE}/api/applications`);
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/applications`) : fetch(`${API_BASE}/api/applications`));
         if (!res.ok) throw new Error('Failed to fetch applications');
         const { data } = await res.json();
         tbody.innerHTML = data.map(app => renderApplicationRow(app)).join('');
@@ -546,7 +539,7 @@ async function loadPaymentsForAdmin() {
     if (!container) return;
     container.innerHTML = '';
     try {
-        const res = await fetch(`${API_BASE}/api/payments`);
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/payments`) : fetch(`${API_BASE}/api/payments`));
         if (!res.ok) throw new Error('Failed to fetch payments');
         const { data } = await res.json();
         if (!data.length) { container.innerHTML = '<p>No payments yet.</p>'; return; }
@@ -580,9 +573,7 @@ async function updatePaymentStatus(paymentId, status) {
     const ok = await showConfirm('Update Payment', `Mark this payment as ${status}?`);
     if (!ok) return;
     try {
-        const res = await fetch(`${API_BASE}/api/payments/${paymentId}/status`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
-        });
+        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/payments/${paymentId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }) : fetch(`${API_BASE}/api/payments/${paymentId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }));
         if (!res.ok) throw new Error('Failed to update payment');
         loadPaymentsForAdmin();
     } catch (e) { alert(e.message); }
@@ -666,10 +657,7 @@ function showAdminPasswordResetModal(userId) {
             return;
         }
         try {
-            const res = await fetch(`${API_BASE}/api/change-password`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, newPassword: newPass })
-            });
+            const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/change-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, newPassword: newPass }) }) : fetch(`${API_BASE}/api/change-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, newPassword: newPass }) }));
             if (!res.ok) throw new Error('Failed to update password');
             if (appModal) { showInfo('Success', 'Password updated. Please login again.'); }
             else { alert('Password updated. Please login again.'); }
@@ -729,7 +717,7 @@ async function loadStudents() {
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:8px;">Loading...</td></tr>';
     try {
-        const res = await fetch(`${API_BASE}/api/students`);
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/students`) : fetch(`${API_BASE}/api/students`));
         if (!res.ok) throw new Error('Failed to fetch students');
         const { data } = await res.json();
         const q = (document.getElementById('studentSearch')?.value || '').toLowerCase();
@@ -756,7 +744,7 @@ async function resetStudentPassword(studentId, fullName, email) {
     const ok = await showConfirm('Reset Password', `Reset password for <b>${fullName}</b> (${email})?`);
     if (!ok) return;
     try {
-        const res = await fetch(`${API_BASE}/api/users/${studentId}/reset-password`, { method: 'POST' });
+    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/users/${studentId}/reset-password`, { method: 'POST' }) : fetch(`${API_BASE}/api/users/${studentId}/reset-password`, { method: 'POST' }));
         if (!res.ok) throw new Error('Failed to reset password');
         showInfo('Success', 'Temporary password (OTP) emailed to the student.');
     } catch (e) { showInfo('Error', e.message); }
@@ -778,10 +766,7 @@ function openEditStudent(studentId, fullName, email) {
                 const fullNameNew = document.getElementById('editFullName').value.trim();
                 const emailNew = document.getElementById('editEmail').value.trim();
                 try {
-                    const res = await fetch(`${API_BASE}/api/students/${studentId}`, {
-                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fullName: fullNameNew, email: emailNew })
-                    });
+                    const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/students/${studentId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fullNameNew, email: emailNew }) }) : fetch(`${API_BASE}/api/students/${studentId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fullNameNew, email: emailNew }) }));
                     if (!res.ok) throw new Error('Failed to update student');
                     loadStudents();
                 } catch (e) { showInfo('Error', e.message); }
@@ -796,8 +781,8 @@ async function loadReportsStats() {
     container.innerHTML = '<p>Loading...</p>';
     try {
         const [appsRes, studentsRes] = await Promise.all([
-            fetch(`${API_BASE}/api/applications-stats`),
-            fetch(`${API_BASE}/api/students-stats`)
+            (window.apiFetch ? window.apiFetch(`${API_BASE}/api/applications-stats`) : fetch(`${API_BASE}/api/applications-stats`)),
+            (window.apiFetch ? window.apiFetch(`${API_BASE}/api/students-stats`) : fetch(`${API_BASE}/api/students-stats`))
         ]);
         if (!appsRes.ok || !studentsRes.ok) throw new Error('Failed to load stats');
         const apps = await appsRes.json();
