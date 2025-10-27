@@ -150,6 +150,7 @@ window.setAuthToken = function(token) {
             localStorage.setItem('token', token);
             // Also keep a memory copy for quick access
             window.__auth_token = token;
+            console.log('setAuthToken: token set');
         }
     } catch (e) { console.warn('setAuthToken error', e); }
 };
@@ -158,6 +159,7 @@ window.clearAuthToken = function() {
     try {
         localStorage.removeItem('token');
         window.__auth_token = null;
+        console.log('clearAuthToken: token cleared');
     } catch (e) { console.warn('clearAuthToken error', e); }
 };
 
