@@ -12,19 +12,36 @@
   }
 
   async function apiLogin(username, password) {
-    const res = await fetch(`${API_BASE}/api/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    if (!res.ok) {
-      let msg = 'Login failed';
-      try { const j = await res.json(); msg = j.message || msg; } catch {}
-      throw new Error(msg);
+    console.log('Attempting login for username:', username);
+    console.log('API URL:', `${API_BASE}/api/login`);
+    console.log('Request payload:', { username, password: '***' });
+
+    try {
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+      
+      console.log('Login response status:', res.status);
+      console.log('Response headers:', Array.from(res.headers.entries()));
+
+      // Always try to parse response body for better error info
+      const json = await res.json().catch(e => ({ message: 'Could not parse response' }));
+      console.log('Response body:', json);
+
+      if (!res.ok) {
+        throw new Error(json.message || 'Login failed');
+      }
+
+      return json;
+    } catch (err) {
+      console.error('Login error:', err);
+      throw err;
     }
-    const json = await res.json();
-    console.log('apiLogin response:', json);
-    return json;
   }
 
   async function verifyToken() {
@@ -37,7 +54,9 @@
   }
 
   async function handleLogin(username, password) {
+    console.log('handleLogin called for:', username);
     const { user, token } = await apiLogin(username, password);
+    console.log('Login response parsed:', { hasUser: !!user, hasToken: !!token });
     if (!user) throw new Error('Invalid login response: missing user');
     if (!token) {
       // helpful error for debugging

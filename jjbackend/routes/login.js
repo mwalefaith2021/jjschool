@@ -33,18 +33,29 @@ router.post('/login', validateLogin, async (req, res) => {
         }
 
         const { username, password } = req.body;
+        
+        console.log('Login attempt:', { username, hasPassword: !!password });
+
+        if (!username || !password) {
+            console.log('Missing credentials');
+            return res.status(400).json({ message: 'Username and password are required.' });
+        }
 
         // Find the user by username
         const user = await User.findOne({ username, isActive: true });
+        console.log('User lookup result:', { found: !!user, username });
 
         if (!user) {
+            console.log('User not found:', username);
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 
         // Compare the provided password with the hashed password
         const isMatch = await user.comparePassword(password);
+        console.log('Password check:', { username, isMatch });
 
         if (!isMatch) {
+            console.log('Invalid password for user:', username);
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 
