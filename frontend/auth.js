@@ -1,10 +1,22 @@
 // Minimal, unified auth for Netlify + Render (no admin-specific extras)
 (function() {
   function setSession(user, token) {
+    // First, clear any existing session data
+    clearSession();
+    
+    // Set all session data
     localStorage.setItem('userType', user.role || 'student');
     localStorage.setItem('username', user.username || '');
     localStorage.setItem('userProfile', JSON.stringify(user));
+    
+    // Set token in localStorage and through window.setAuthToken if available
     localStorage.setItem('token', token);
+    if (window.setAuthToken) {
+      window.setAuthToken(token);
+      console.log('Auth token set via setAuthToken');
+    } else {
+      console.log('Auth token stored in localStorage');
+    }
   }
 
   function clearSession() {
@@ -46,34 +58,82 @@
 
   async function verifyToken() {
     const token = localStorage.getItem('token');
-    if (!token) return false;
+    if (!token) {
+      console.log('No token found in localStorage');
+      return false;
+    }
     try {
-      const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/verify`) : fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } }));
-      return res.ok;
-    } catch { return false; }
+      // Use apiFetch if available, otherwise manually add token to headers
+      const res = await (window.apiFetch ? 
+        window.apiFetch(`${API_BASE}/api/verify`) : 
+        fetch(`${API_BASE}/api/verify`, { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        })
+      );
+      
+      // If response is not ok, clear session
+      if (!res.ok) {
+        console.log('Token verification failed:', res.status);
+        clearSession();
+        return false;
+      }
+      
+      console.log('Token verified successfully');
+      return true;
+    } catch (e) { 
+      console.log('Token verification error:', e.message);
+      clearSession();
+      return false; 
+    }
   }
 
   async function handleLogin(username, password) {
     console.log('handleLogin called for:', username);
-    const { user, token } = await apiLogin(username, password);
-    console.log('Login response parsed:', { hasUser: !!user, hasToken: !!token });
-    if (!user) throw new Error('Invalid login response: missing user');
-    if (!token) {
-      // helpful error for debugging
-      console.error('Login succeeded but no token returned from server', { user });
-      throw new Error('Login did not return an authentication token. Please contact support.');
+    
+    try {
+      // First clear any existing session
+      clearSession();
+      
+      // Attempt login
+      const response = await apiLogin(username, password);
+      console.log('Login response parsed:', { hasUser: !!response.user, hasToken: !!response.token });
+      
+      // Validate response contains required data
+      if (!response.user) {
+        throw new Error('Invalid login response: missing user data');
+      }
+      if (!response.token) {
+        console.error('Login succeeded but no token returned from server', { user: response.user });
+        throw new Error('Login did not return an authentication token. Please contact support.');
+      }
+      
+      const { user, token } = response;
+      
+      // Set session data
+      setSession(user, token);
+      
+      // Check for password reset requirement before redirecting
+      if (user.requiresPasswordReset) {
+        if (typeof showAdminPasswordResetModal === 'function' && user.role === 'admin') {
+          showAdminPasswordResetModal(user.id);
+          return;
+        }
+        // TODO: Handle student password reset if needed
+      }
+      
+      // Redirect based on role
+      const redirectPath = user.role === 'admin' ? 'admindashboard.html' : 'studentdashboard.html';
+      console.log(`Redirecting ${user.role} to ${redirectPath}`);
+      window.location.replace(redirectPath);
+      
+    } catch (error) {
+      // Clear session on any error
+      clearSession();
+      throw error;
     }
-    setSession(user, token);
-    if (window.setAuthToken) {
-      window.setAuthToken(token);
-      console.log('Auth token stored via setAuthToken');
-    } else {
-      localStorage.setItem('token', token);
-      console.log('Auth token stored in localStorage');
-    }
-    // Redirect by role (default student)
-    if (user.role === 'admin') window.location.href = 'admindashboard.html';
-    else window.location.href = 'studentdashboard.html';
   }
 
   window.Auth = { login: handleLogin, verify: verifyToken, clear: clearSession };

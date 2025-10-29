@@ -130,23 +130,27 @@ async function checkAuth() {
     const username = localStorage.getItem('username');
     const token = localStorage.getItem('token');
     
-    if (!userType || !username || userType !== 'admin') {
-        window.location.href = 'login.html';
+    // If any essential auth data is missing, redirect immediately
+    if (!userType || !username || !token || userType !== 'admin') {
+        console.log('Missing auth data:', { userType, username, hasToken: !!token });
+        window.location.replace('login.html');
         return false;
     }
-    // verify token with backend
+
+    // Only verify token with backend if we have one
     try {
-        // use apiFetch to attach token automatically
+        // use apiFetch to attach token automatically if available
         const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/verify`) : fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } }));
-        if (!res.ok) throw new Error('Invalid');
+        if (!res.ok) throw new Error('Invalid token');
         return true;
-    } catch {
+    } catch (e) {
+        console.log('Token verification failed:', e.message);
         // clear and redirect
         localStorage.removeItem('userType');
         localStorage.removeItem('username');
         localStorage.removeItem('userProfile');
         localStorage.removeItem('token');
-        window.location.href = 'login.html';
+        window.location.replace('login.html');
         return false;
     }
 }
