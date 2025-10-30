@@ -1,7 +1,4 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// Tokens removed: no JWT or user lookup required here
 
 function noCache(req, res, next) {
   // Prevent browsers and proxies from caching sensitive responses
@@ -13,19 +10,8 @@ function noCache(req, res, next) {
 }
 
 async function requireAuth(req, res, next) {
-  // Accept token from Authorization header (Bearer), x-access-token header or ?token query
-  const header = req.headers.authorization || req.headers['x-access-token'] || '';
-  const token = (header && header.split ? header.split(' ')[1] : header) || req.query.token;
-  if (!token) return res.status(401).json({ message: 'No token provided' });
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.userId);
-    if (!user || !user.isActive) return res.status(401).json({ message: 'Invalid token' });
-    req.user = user;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
-  }
+  // No-op: authentication disabled (no tokens). All requests pass through.
+  return next();
 }
 
 module.exports = { noCache, requireAuth };

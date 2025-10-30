@@ -1,22 +1,13 @@
-// Minimal, unified auth for Netlify + Render (no admin-specific extras)
+// Minimal, unified auth without tokens
 (function() {
-  function setSession(user, token) {
+  function setSession(user) {
     // First, clear any existing session data
     clearSession();
     
-    // Set all session data
+    // Persist lightweight session info only (no tokens)
     localStorage.setItem('userType', user.role || 'student');
     localStorage.setItem('username', user.username || '');
     localStorage.setItem('userProfile', JSON.stringify(user));
-    
-    // Set token in localStorage and through window.setAuthToken if available
-    localStorage.setItem('token', token);
-    if (window.setAuthToken) {
-      window.setAuthToken(token);
-      console.log('Auth token set via setAuthToken');
-    } else {
-      console.log('Auth token stored in localStorage');
-    }
   }
 
   function clearSession() {
@@ -56,38 +47,11 @@
     }
   }
 
-  async function verifyToken() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('No token found in localStorage');
-      return false;
-    }
-    try {
-      // Use apiFetch if available, otherwise manually add token to headers
-      const res = await (window.apiFetch ? 
-        window.apiFetch(`${API_BASE}/api/verify`) : 
-        fetch(`${API_BASE}/api/verify`, { 
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        })
-      );
-      
-      // If response is not ok, clear session
-      if (!res.ok) {
-        console.log('Token verification failed:', res.status);
-        clearSession();
-        return false;
-      }
-      
-      console.log('Token verified successfully');
-      return true;
-    } catch (e) { 
-      console.log('Token verification error:', e.message);
-      clearSession();
-      return false; 
-    }
+  // No-token "verification": ensure minimal session info exists
+  async function verifySession() {
+    const hasUser = !!localStorage.getItem('username');
+    if (!hasUser) clearSession();
+    return hasUser;
   }
 
   async function handleLogin(username, password) {
@@ -99,21 +63,17 @@
       
       // Attempt login
       const response = await apiLogin(username, password);
-      console.log('Login response parsed:', { hasUser: !!response.user, hasToken: !!response.token });
+      console.log('Login response parsed:', { hasUser: !!response.user });
       
       // Validate response contains required data
       if (!response.user) {
         throw new Error('Invalid login response: missing user data');
       }
-      if (!response.token) {
-        console.error('Login succeeded but no token returned from server', { user: response.user });
-        throw new Error('Login did not return an authentication token. Please contact support.');
-      }
       
-      const { user, token } = response;
+      const { user } = response;
       
-      // Set session data
-      setSession(user, token);
+      // Set session data (no token)
+      setSession(user);
       
       // Check for password reset requirement before redirecting
       if (user.requiresPasswordReset) {
@@ -136,5 +96,5 @@
     }
   }
 
-  window.Auth = { login: handleLogin, verify: verifyToken, clear: clearSession };
+  window.Auth = { login: handleLogin, verify: verifySession, clear: clearSession };
 })();

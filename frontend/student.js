@@ -24,13 +24,10 @@ function loginStudentUser(username, password) {
     })
     .then(data => {
         if (data.message === 'Login successful!' && data.user.role === 'student') {
-            // Store user data in localStorage
+            // Store user data in localStorage (no tokens)
             localStorage.setItem('userType', 'student');
             localStorage.setItem('username', data.user.username);
             localStorage.setItem('userProfile', JSON.stringify(data.user));
-            // Store token centrally and ensure apiFetch will attach it
-            if (window.setAuthToken) window.setAuthToken(data.token);
-            else localStorage.setItem('token', data.token);
 
             // If first login, force password change
             if (data.user.requiresPasswordReset) {
@@ -92,8 +89,8 @@ window.addEventListener('pageshow', function(event) {
     // Check if page is loaded from cache (back button)
     if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
         // If no valid session, redirect to login
-        const token = localStorage.getItem('token');
-        if (!token && !window.location.pathname.includes('login.html')) {
+        const username = localStorage.getItem('username');
+        if (!username && !window.location.pathname.includes('login.html')) {
             window.location.replace('login.html');
         }
     }
@@ -112,8 +109,8 @@ if (window.history && window.history.pushState) {
     try {
         window.history.pushState(null, null, window.location.href);
         window.addEventListener('popstate', function () {
-            const token = localStorage.getItem('token');
-            if (!token) {
+            const username = localStorage.getItem('username');
+            if (!username) {
                 window.location.replace('login.html');
             } else {
                 window.location.reload();
@@ -131,26 +128,14 @@ async function checkAuth() {
     
     const userType = localStorage.getItem('userType');
     const username = localStorage.getItem('username');
-    const token = localStorage.getItem('token');
     
     if (!userType || !username || userType !== 'student') {
         alert('Access denied. Please login as student.');
         window.location.href = 'login.html';
         return false;
     }
-    // Verify token with backend
-    try {
-        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/verify`) : fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } }));
-        if (!res.ok) throw new Error('Invalid');
-        return true;
-    } catch {
-        localStorage.removeItem('userType');
-        localStorage.removeItem('username');
-        localStorage.removeItem('userProfile');
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-        return false;
-    }
+    // No server verification when tokens are disabled
+    return true;
 }
 
 // Initialize student dashboard

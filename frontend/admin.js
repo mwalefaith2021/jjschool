@@ -24,13 +24,10 @@ function loginAdminUser(username, password) {
     })
     .then(data => {
         if (data.message === 'Login successful!' && data.user.role === 'admin') {
-            // Store user data in localStorage
+            // Store user data in localStorage (no tokens)
             localStorage.setItem('userType', 'admin');
             localStorage.setItem('username', data.user.username);
             localStorage.setItem('userProfile', JSON.stringify(data.user));
-            // Store token centrally and ensure apiFetch will attach it
-            if (window.setAuthToken) window.setAuthToken(data.token);
-            else localStorage.setItem('token', data.token);
             // Require password reset if flagged
             if (data.user.requiresPasswordReset) {
                 showAdminPasswordResetModal(data.user.id);
@@ -85,8 +82,8 @@ window.addEventListener('pageshow', function(event) {
     // Check if page is loaded from cache (back button)
     if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
         // If no valid session, redirect to login
-        const token = localStorage.getItem('token');
-        if (!token && !window.location.pathname.includes('login.html')) {
+        const username = localStorage.getItem('username');
+        if (!username && !window.location.pathname.includes('login.html')) {
             window.location.replace('login.html');
         }
     }
@@ -97,8 +94,8 @@ if (window.history && window.history.pushState) {
     try {
         window.history.pushState(null, null, window.location.href);
         window.addEventListener('popstate', function () {
-            const token = localStorage.getItem('token');
-            if (!token) {
+            const username = localStorage.getItem('username');
+            if (!username) {
                 // If logged out, ensure user cannot return to this page
                 window.location.replace('login.html');
             } else {
@@ -128,31 +125,16 @@ async function checkAuth() {
     
     const userType = localStorage.getItem('userType');
     const username = localStorage.getItem('username');
-    const token = localStorage.getItem('token');
     
     // If any essential auth data is missing, redirect immediately
-    if (!userType || !username || !token || userType !== 'admin') {
-        console.log('Missing auth data:', { userType, username, hasToken: !!token });
+    if (!userType || !username || userType !== 'admin') {
+        console.log('Missing auth data:', { userType, username });
         window.location.replace('login.html');
         return false;
     }
 
-    // Only verify token with backend if we have one
-    try {
-        // use apiFetch to attach token automatically if available
-        const res = await (window.apiFetch ? window.apiFetch(`${API_BASE}/api/verify`) : fetch(`${API_BASE}/api/verify`, { headers: { 'Authorization': `Bearer ${token}` } }));
-        if (!res.ok) throw new Error('Invalid token');
-        return true;
-    } catch (e) {
-        console.log('Token verification failed:', e.message);
-        // clear and redirect
-        localStorage.removeItem('userType');
-        localStorage.removeItem('username');
-        localStorage.removeItem('userProfile');
-        localStorage.removeItem('token');
-        window.location.replace('login.html');
-        return false;
-    }
+    // Tokens are disabled: consider the presence of session data as authenticated
+    return true;
 }
 
 // Initialize admin dashboard

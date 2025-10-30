@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-
-// JWT Secret (in production, use environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// Tokens removed: no JWT secret needed
 
 // Validation middleware
 const validateLogin = [
@@ -63,20 +60,8 @@ router.post('/login', validateLogin, async (req, res) => {
         user.lastLogin = new Date();
         await user.save();
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { 
-                userId: user._id, 
-                username: user.username, 
-                role: user.role 
-            },
-            JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
         res.status(200).json({ 
             message: 'Login successful!', 
-            token,
             user: { 
                 id: user._id, 
                 username: user.username, 
@@ -147,10 +132,10 @@ router.post('/register', validateRegister, async (req, res) => {
     }
 });
 
-// POST route for logout (client should remove stored token). Also set no-cache headers so logged-out pages won't be cached.
+// POST route for logout (client should remove any stored session data). Also set no-cache headers so logged-out pages won't be cached.
 const { noCache } = require('../middleware/auth');
 router.post('/logout', (req, res) => {
-    // Try to clear any session cookie (if present); this project uses JWTs but clear cookie if set
+    // Try to clear any session cookie (if present)
     try {
         res.clearCookie && res.clearCookie('connect.sid', { path: '/' });
     } catch (e) {}
@@ -158,8 +143,8 @@ router.post('/logout', (req, res) => {
     // Ensure responses are not cached
     noCache(req, res, () => {});
 
-    // Inform client to remove token from storage. The server cannot "destroy" a JWT unless a blacklist is used.
-    res.status(200).json({ message: 'Logout successful. Please remove token from client storage.' });
+    // Inform client to remove client-side session state
+    res.status(200).json({ message: 'Logout successful.' });
 });
 
 // Change password (first-time login flow)
@@ -187,37 +172,6 @@ router.post('/change-password', async (req, res) => {
     }
 });
 
-// GET route to verify token
-router.get('/verify', async (req, res) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        
-        if (!token) {
-            return res.status(401).json({ message: 'No token provided.' });
-        }
-
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('-password');
-        
-        if (!user || !user.isActive) {
-            return res.status(401).json({ message: 'Invalid token.' });
-        }
-
-        res.status(200).json({ 
-            message: 'Token valid',
-            user: {
-                id: user._id,
-                username: user.username,
-                role: user.role,
-                fullName: user.fullName,
-                email: user.email
-            }
-        });
-
-    } catch (error) {
-        console.error('Token verification error:', error);
-        res.status(401).json({ message: 'Invalid token.' });
-    }
-});
+// Tokens removed: /verify endpoint is no longer used
 
 module.exports = router;
