@@ -366,7 +366,7 @@ function renderApplicationDetails(app) {
 
 async function approveApplication(applicationId) {
     try {
-        const ok = await showConfirm('Approve Application', 'Are you sure you want to approve this application?');
+        const ok = await showConfirm('Approve Application', 'Are you sure, you want to approve this application?');
         if (!ok) return;
 
         // Show inline loading on the row button if present
