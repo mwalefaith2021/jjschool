@@ -1,5 +1,10 @@
 // Minimal, unified auth without tokens
 (function() {
+  function genSessionKey() {
+    // Lightweight random key to mark an active tab session
+    return 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
   function setSession(user) {
     // First, clear any existing session data
     clearSession();
@@ -8,10 +13,20 @@
     localStorage.setItem('userType', user.role || 'student');
     localStorage.setItem('username', user.username || '');
     localStorage.setItem('userProfile', JSON.stringify(user));
+
+    // Mark an active session for this tab only
+    sessionStorage.setItem('sessionKey', genSessionKey());
+    // Store current session epoch to detect logout from other tabs
+    const epoch = String(Date.now());
+    localStorage.setItem('sessionEpoch', epoch);
   }
 
   function clearSession() {
     ['userType', 'username', 'userProfile', 'token'].forEach(k => localStorage.removeItem(k));
+    // Broadcast a logout by bumping the epoch
+    localStorage.setItem('sessionEpoch', String(Date.now()));
+    // Clear volatile tab key
+    sessionStorage.removeItem('sessionKey');
   }
 
   async function apiLogin(username, password) {
@@ -96,5 +111,52 @@
     }
   }
 
-  window.Auth = { login: handleLogin, verify: verifySession, clear: clearSession };
+  function isAuthed(requiredRole) {
+    const username = localStorage.getItem('username');
+    const userType = localStorage.getItem('userType');
+    const tabKey = sessionStorage.getItem('sessionKey');
+    if (!username || !userType || !tabKey) return false;
+    if (requiredRole && userType !== requiredRole) return false;
+    return true;
+  }
+
+  function installGuards(requiredRole) {
+    const ensure = () => {
+      if (!isAuthed(requiredRole)) {
+        // Defensive clear to avoid stale state and cached pages
+        sessionStorage.removeItem('sessionKey');
+        window.location.replace('login.html');
+      }
+    };
+
+    // Immediate check
+    ensure();
+
+    // Back/forward cache and history navigation
+    window.addEventListener('pageshow', () => ensure());
+    if (window.history && window.history.pushState) {
+      try {
+        window.history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', ensure);
+      } catch (_) {}
+    }
+
+    // When tab becomes visible again
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ensure(); });
+
+    // Cross-tab logout broadcast
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'sessionEpoch') ensure();
+      if (ev.key === 'userType' || ev.key === 'username') ensure();
+    });
+  }
+
+  // Auto-guard dashboards based on path
+  document.addEventListener('DOMContentLoaded', () => {
+    const path = (location.pathname || '').toLowerCase();
+    if (path.includes('admindashboard')) installGuards('admin');
+    if (path.includes('studentdashboard')) installGuards('student');
+  });
+
+  window.Auth = { login: handleLogin, verify: verifySession, clear: clearSession, installGuards, isAuthed };
 })();
